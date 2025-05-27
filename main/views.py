@@ -1,13 +1,10 @@
 # views.py
 from django.shortcuts import render, redirect
-from django.contrib.auth import login, logout
 from django.contrib import messages
 from django.http import JsonResponse
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User
+import uuid
 import random
 import string
-import hashlib
 from datetime import datetime
 from supabase_client import supabase
 from .forms import (
@@ -24,15 +21,18 @@ def login_view(request):
         password = request.POST.get('password')
         
         try:
-            # Query user from Supabase
-            result = supabase.table('pengguna').select('*').eq('username', username).execute()
+            result = supabase.rpc('verify_login_credentials', {
+                'input_username': username,
+                'input_password': password
+            }).execute()
             
             if result.data and len(result.data) > 0:
-                user_data = result.data[0]
-                if password == user_data['password']:
-                    # Create session
+                verification = result.data[0]
+                
+                if verification['is_valid']:
+                    # Login berhasil
                     request.session['username'] = username
-                    request.session['user_data'] = user_data
+                    request.session['user_data'] = verification['user_data']
                     
                     # Determine user role
                     role = get_user_role(username)
@@ -40,9 +40,10 @@ def login_view(request):
                     
                     return redirect('main:dashboard')
                 else:
-                    messages.error(request, 'Username atau password salah')
+                    # Login gagal - pesan error dari stored procedure
+                    messages.error(request, verification['message'])
             else:
-                messages.error(request, 'Username atau password salah')
+                messages.error(request, 'Terjadi kesalahan sistem')
                 
         except Exception as e:
             messages.error(request, f'Error saat login: {str(e)}')
@@ -156,9 +157,14 @@ def register_visitor(request):
                 return redirect('main:login')
                 
             except Exception as e:
-                messages.error(request, f'Error saat registrasi: {str(e)}')
+                error_message = e.message
                 
-                # Try to cleanup if pengguna was inserted but pengunjung failed
+                # Cek apakah error duplikasi username
+                if 'sudah digunakan' in error_message or 'already exists' in error_message.lower():
+                    messages.error(request, error_message)
+                else:
+                    messages.error(request, f'Error saat registrasi: {error_message}')
+                
                 try:
                     supabase.table('pengguna').delete().eq('username', username).execute()
                 except:
@@ -175,7 +181,6 @@ def register_veterinarian(request):
             try:
                 username = form.cleaned_data['username']
                 password = form.cleaned_data['password1']
-                
                 
                 # Insert into PENGGUNA table
                 pengguna_data = {
@@ -211,18 +216,28 @@ def register_veterinarian(request):
                     else form.cleaned_data.get('specialization')
                 )
                 
-                spesialisasi_data = {
-                    'username_sh': username,
-                    'nama_spesialisasi': specialization
-                }
-                
-                spesialisasi_result = supabase.table('spesialisasi').insert(spesialisasi_data).execute()
+                if specialization:
+                    spesialisasi_data = {
+                        'username_sh': username,
+                        'nama_spesialisasi': specialization
+                    }
+                    
+                    try:
+                        spesialisasi_result = supabase.table('spesialisasi').insert(spesialisasi_data).execute()
+                    except:
+                        pass
                 
                 messages.success(request, 'Registrasi berhasil! Silakan login.')
                 return redirect('main:login')
                 
             except Exception as e:
-                messages.error(request, f'Error saat registrasi: {str(e)}')
+                error_message = e.message
+                
+                # Cek apakah error duplikasi username
+                if 'sudah digunakan' in error_message or 'already exists' in error_message.lower():
+                    messages.error(request, error_message)
+                else:
+                    messages.error(request, f'Error saat registrasi: {error_message}')
                 
                 # Cleanup on error
                 try:
@@ -261,8 +276,8 @@ def register_staff(request, staff_role=None):
                 if not pengguna_result.data:
                     raise Exception("Failed to insert into pengguna table")
                 
-                # Insert into appropriate staff table based on role
-                staff_id = form.cleaned_data['staff_id']
+                # Generate UUID for staff ID
+                staff_id = str(uuid.uuid4())
                 
                 if staff_role == 'animal_keeper':
                     staff_data = {
@@ -292,7 +307,13 @@ def register_staff(request, staff_role=None):
                 return redirect('main:login')
                 
             except Exception as e:
-                messages.error(request, f'Error saat registrasi: {str(e)}')
+                error_message = e.message
+                
+                # Cek apakah error duplikasi username
+                if 'sudah digunakan' in error_message or 'already exists' in error_message.lower():
+                    messages.error(request, error_message)
+                else:
+                    messages.error(request, f'Error saat registrasi: {error_message}')
                 
                 # Cleanup on error
                 try:
@@ -315,16 +336,8 @@ def register_staff(request, staff_role=None):
     })
 
 def generate_staff_id(request):
-    """AJAX endpoint to generate staff ID"""
-    role = request.GET.get('role')
-    prefix_map = {
-        'animal_keeper': 'PJH',
-        'admin_staff': 'ADM',
-        'trainer': 'PLP'
-    }
-    prefix = prefix_map.get(role, 'STF')
-    random_suffix = ''.join(random.choices(string.digits, k=3))
-    staff_id = f"{prefix}{random_suffix}"
+    """AJAX endpoint to generate UUID-based staff ID"""
+    staff_id = str(uuid.uuid4())
     return JsonResponse({'staff_id': staff_id})
 
 def login_required_custom(view_func):
