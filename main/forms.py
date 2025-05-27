@@ -198,7 +198,7 @@ class StaffRegistrationForm(BaseRegistrationForm):
         label='Jenis Staff'
     )
     staff_id = forms.CharField(
-        max_length=10, 
+        max_length=36, 
         required=False, 
         widget=forms.TextInput(attrs={'readonly': 'readonly', 'class': 'form-control'}),
         label='ID Staff'
