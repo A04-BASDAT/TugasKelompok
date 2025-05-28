@@ -1,5 +1,22 @@
+from datetime import date
 from supabase_client import supabase
 from typing import Dict, List, Any, Optional
+
+def serialize_dates(data: Dict[str, Any]) -> Dict[str, Any]:
+    from datetime import date, datetime
+    serialized_data = {}
+    
+    for key, value in data.items():
+        if isinstance(value, (date, datetime)):
+            serialized_data[key] = value.isoformat()
+        elif isinstance(value, str) and key in ['tanggal_pemeriksaan', 'tgl_pemeriksaan_selanjutnya']:
+            # Pastikan format tanggal sudah benar
+            serialized_data[key] = value
+        else:
+            serialized_data[key] = value
+    
+    return serialized_data
+
 
 # Adopsi related functions
 def get_all_adopsi() -> List[Dict[str, Any]]:
@@ -194,8 +211,14 @@ def create_complete_adopter(adopter_data: Dict[str, Any], type_data: Dict[str, A
 def create_hewan(data: Dict[str, Any]) -> Dict[str, Any]:
     return supabase.table('hewan').insert(data).execute().data[0]
 
-def create_catatan_medis(data: Dict[str, Any]) -> Dict[str, Any]:
-    return supabase.table('catatan_medis').insert(data).execute().data[0]
+def create_catatan_medis(data):
+    # Pastikan tidak mengirim field yang tidak ada di Supabase
+    data.pop('created_at', None)  # Hapus kalau ada
+    data.pop('updated_at', None)  # Kalau kamu pernah pakai ini juga
+
+    response = supabase.table("catatan_medis").insert(data).execute()
+    print("[DEBUG] Data dikirim ke Supabase (insert):", data)
+    return response
 
 def create_reservasi(data: Dict[str, Any]) -> Dict[str, Any]:
     return supabase.table('reservasi').insert(data).execute().data[0]
@@ -225,3 +248,35 @@ def delete_adopter(id_adopter: str) -> None:
 
 def delete_reservasi(username_p: str, tanggal: str) -> Dict[str, Any]:
     return supabase.table('reservasi').delete().eq('username_p', username_p).eq('tanggal_kunjungan', tanggal).execute().data[0] 
+
+
+# punya abby
+# Get single medical record by id_hewan and tanggal_pemeriksaan
+def get_catatan_medis_by_key(id_hewan: str, tanggal: str) -> Optional[Dict[str, Any]]:
+    result = supabase.table('catatan_medis').select('*')\
+        .eq('id_hewan', id_hewan).eq('tanggal_pemeriksaan', tanggal).execute().data
+    return result[0] if result else None
+
+# Delete catatan medis by id_hewan and tanggal_pemeriksaan
+def delete_catatan_medis(id_hewan: str, tanggal: str) -> Dict[str, Any]:
+    return supabase.table('catatan_medis').delete()\
+        .eq('id_hewan', id_hewan).eq('tanggal_pemeriksaan', tanggal).execute().data[0]
+
+# Create new health check schedule
+def create_jadwal_pemeriksaan(data: Dict[str, Any]) -> Dict[str, Any]:
+    data = serialize_dates(data)
+    return supabase.table('jadwal_pemeriksaan_kesehatan').insert(data).execute().data[0]
+
+# Get all schedules for a specific animal
+def get_jadwal_pemeriksaan_by_id_hewan(id_hewan: str) -> List[Dict[str, Any]]:
+    return supabase.table('jadwal_pemeriksaan_kesehatan').select('*').eq('id_hewan', id_hewan).execute().data
+
+# Update schedule (by id_hewan and tanggal)
+def update_jadwal_pemeriksaan(id_hewan: str, tanggal: str, data: Dict[str, Any]) -> Dict[str, Any]:
+    return supabase.table('jadwal_pemeriksaan_kesehatan')\
+        .update(data).eq('id_hewan', id_hewan).eq('tgl_pemeriksaan_selanjutnya', tanggal).execute().data[0]
+
+# Delete schedule (by id_hewan and tanggal)
+def delete_jadwal_pemeriksaan(id_hewan: str, tanggal: str) -> Dict[str, Any]:
+    return supabase.table('jadwal_pemeriksaan_kesehatan')\
+        .delete().eq('id_hewan', id_hewan).eq('tgl_pemeriksaan_selanjutnya', tanggal).execute().data[0]

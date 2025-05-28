@@ -1,11 +1,19 @@
 from django import forms
 from .models import MedicalRecord
+from supabase_utils import get_all_hewan
+from .models import MedicalRecord
 from .models import HealthCheckSchedule
 
+
 class MedicalRecordForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        choices = [(hewan['id'], f"{hewan['nama']} ({hewan['id']})") for hewan in get_all_hewan()]
+        self.fields['id_hewan'] = forms.ChoiceField(choices=choices, label="Hewan")
+
     class Meta:
         model = MedicalRecord
-        fields = ['tanggal_pemeriksaan', 'nama_dokter', 'status_kesehatan', 'diagnosis', 'pengobatan']
+        fields = ['id_hewan', 'tanggal_pemeriksaan', 'username_dh', 'status_kesehatan', 'diagnosis', 'pengobatan']
 
     def clean(self):
         cleaned_data = super().clean()
@@ -24,10 +32,12 @@ class EditMedicalRecordForm(forms.ModelForm):
         model = MedicalRecord
         fields = ['catatan_tindak_lanjut', 'diagnosis', 'pengobatan']
 
-class HealthCheckScheduleForm(forms.ModelForm):
-    class Meta:
-        model = HealthCheckSchedule
-        fields = ['tanggal_pemeriksaan_selanjutnya']
-        widgets = {
-            'tanggal_pemeriksaan_selanjutnya': forms.DateInput(attrs={'type': 'date'})
-        }
+class HealthCheckScheduleForm(forms.Form):  # ✅ gunakan forms.Form jika bukan dari model
+    id_hewan = forms.ChoiceField(label="Pilih Hewan")
+    tanggal_pemeriksaan_selanjutnya = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}))
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['id_hewan'].choices = [
+            (hewan['id'], f"{hewan['nama']} ({hewan['id']})") for hewan in get_all_hewan()
+        ]
