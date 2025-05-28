@@ -1,14 +1,14 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Detail Reservasi{% endblock %}
+{% block title %}Detail Reservasi Wahana{% endblock %}
 
 {% block content %}
 <div class="flex flex-col items-center bg-[#f8f5f0] min-h-screen py-12">
     <!-- Header -->
     <div class="text-center mb-6">
         <h1 class="text-3xl font-bold text-[#586132]">Detail Reservasi</h1>
-        <p class="text-gray-600">Informasi lengkap tentang reservasi Anda</p>
+        <p class="text-gray-600">Informasi lengkap tentang reservasi wahana Anda</p>
     </div>
 
     <!-- Detail Card -->
@@ -23,25 +23,26 @@
             <div class="space-y-4">
                 <div class="border-b border-gray-200 pb-3">
                     <p class="flex flex-col md:flex-row md:justify-between">
-                        <span class="font-semibold text-[#586132]">Nama Atraksi:</span>
+                        <span class="font-semibold text-[#586132]">Nama Wahana:</span>
                         <span class="text-gray-700">
-                            {% if reservasi.nama_atraksi.nama_atraksi.nama %}
-                                {{ reservasi.nama_atraksi.nama_atraksi.nama }}
+                            {% if reservasi.nama_wahana.nama %}
+                                {{ reservasi.nama_wahana.nama }}
                             {% else %}
-                                {{ reservasi.nama_atraksi }}
+                                {{ reservasi.nama_wahana }}
                             {% endif %}
                         </span>
                     </p>
                 </div>
                 
                 <div class="border-b border-gray-200 pb-3">
-                    <p class="flex flex-col md:flex-row md:justify-between">
-                        <span class="font-semibold text-[#586132]">Lokasi:</span>
-                        <span class="text-gray-700">
-                            {% if reservasi.nama_atraksi.lokasi %}
-                                {{ reservasi.nama_atraksi.lokasi }}
+                    <p class="flex flex-col md:flex-row">
+                        <span class="font-semibold text-[#586132] mb-2 md:mb-0 md:w-1/3">Peraturan:</span>
+                        <span class="text-gray-700 md:w-2/3">
+                            {% if reservasi.nama_wahana.peraturan %}
+                                {{ reservasi.nama_wahana.peraturan|linebreaks }}
                             {% else %}
-                                {{ reservasi.lokasi }}
+                                1. Dilarang Berenang.<br>
+                                2. Dilarang membawa makanan
                             {% endif %}
                         </span>
                     </p>
@@ -51,8 +52,8 @@
                     <p class="flex flex-col md:flex-row md:justify-between">
                         <span class="font-semibold text-[#586132]">Jam:</span>
                         <span class="text-gray-700">
-                            {% if reservasi.nama_atraksi.nama_atraksi.jadwal %}
-                                {{ reservasi.nama_atraksi.nama_atraksi.jadwal|time:"H:i" }}
+                            {% if reservasi.nama_wahana.jam_operasional %}
+                                {{ reservasi.nama_wahana.jam_operasional }}
                             {% else %}
                                 {{ reservasi.jam }}
                             {% endif %}
@@ -64,18 +65,14 @@
                     <p class="flex flex-col md:flex-row md:justify-between">
                         <span class="font-semibold text-[#586132]">Tanggal:</span>
                         <span class="text-gray-700">
-                            {% if reservasi.tanggal_kunjungan|stringformat:"s"|slice:":4" == "202" %}
-                                {{ reservasi.tanggal_kunjungan }}
-                            {% else %}
-                                {{ reservasi.tanggal_kunjungan }}
-                            {% endif %}
+                            {{ reservasi.tanggal_kunjungan }}
                         </span>
                     </p>
                 </div>
                 
                 <div class="border-b border-gray-200 pb-3">
                     <p class="flex flex-col md:flex-row md:justify-between">
-                        <span class="font-semibold text-[#586132]">Jumlah Tiket yang Ingin Dibeli:</span>
+                        <span class="font-semibold text-[#586132]">Jumlah tiket yang ingin dibeli:</span>
                         <span class="text-gray-700">{{ reservasi.jumlah_tiket }}</span>
                     </p>
                 </div>
@@ -104,9 +101,9 @@
             <!-- Action Buttons -->
             {% if reservasi.status == 'terjadwal' or reservasi.status == 'Terjadwal' %}
                 <div class="flex justify-center gap-4 mt-8">
-                    <a href="{% url 'tickets:edit_reservasi' reservasi.username_p reservasi.nama_atraksi reservasi.tanggal_kunjungan %}" 
+                    <a href="{% url 'tickets:edit_reservasi_wahana' reservasi.username_p reservasi.nama_wahana reservasi.tanggal_kunjungan %}" 
                        class="px-6 py-2 bg-[#e0cfc2] text-[#586132] font-medium rounded hover:bg-[#d3c0b2] transition-colors">
-                        Edit Reservasi
+                        Edit
                     </a>
                     <!-- Tombol yang buka modal -->
                     <button type="button" 
@@ -129,13 +126,13 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <p class="py-4">Apakah Anda yakin ingin membatalkan reservasi ini?</p>
+                <p class="py-4">Apakah Anda yakin ingin membatalkan reservasi wahana ini?</p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors" data-bs-dismiss="modal">
                     Tidak
                 </button>
-                <form method="post" action="{% url 'tickets:batalkan_reservasi' reservasi.username_p reservasi.nama_atraksi reservasi.tanggal_kunjungan %}">
+                <form method="post" action="{% url 'tickets:batalkan_reservasi_wahana' reservasi.username_p reservasi.nama_wahana reservasi.tanggal_kunjungan %}">
                     {% csrf_token %}
                     <button type="submit" name="confirm" value="ya" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors">
                         Ya

@@ -8,6 +8,15 @@
         <a href="{% url 'animals:animal_add' %}" class="add-button">+ Tambah Satwa</a>
     </div>
     
+    <!-- Display Messages -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+    
     <div class="table-container">
         <table class="habitat-table">
             <thead>
@@ -25,16 +34,28 @@
             <tbody>
                 {% for animal in animals %}
                 <tr>
-                    <td>{{ animal.name }}</td>
-                    <td>{{ animal.species }}</td>
-                    <td>{{ animal.origin }}</td>
-                    <td>{{ animal.birth_date }}</td>
-                    <td>{{ animal.health_status }}</td>
-                    <td>{{ animal.habitat }}</td>
-                    <td><img src="{% static 'images/hewan.jpeg' %}" alt="Foto {{ animal.name }}" width="50" height="50"></td>
+                    <td>{{ animal.nama|default:"-" }}</td>
+                    <td>{{ animal.spesies }}</td>
+                    <td>{{ animal.asal_hewan }}</td>
+                    <td>{{ animal.tanggal_lahir|default:"-" }}</td>
+                    <td>{{ animal.status_kesehatan }}</td>
+                    <td>{{ animal.nama_habitat|default:"-" }}</td>
+                    <td>
+                        {% if animal.url_foto %}
+                            <img src="{{ animal.url_foto }}" alt="Foto {{ animal.nama }}" width="200" height="200" style="object-fit: cover; border-radius: 4px;" onerror="this.src='{% static 'images/hewan.jpeg' %}'">
+                        {% else %}
+                            <img src="{% static 'images/hewan.jpeg' %}" alt="Foto Default" width="200" height="200" style="object-fit: cover; border-radius: 4px;">
+                        {% endif %}
+                    </td>
                     <td class="action-cell">
                         <a href="{% url 'animals:animal_edit' animal.id %}" class="action-button edit-button">Edit</a>
                         <a href="{% url 'animals:animal_delete' animal.id %}" class="action-button delete-button">Hapus</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" style="text-align: center; padding: 20px; color: #666;">
+                        Belum ada data satwa. <a href="{% url 'animals:animal_add' %}">Tambah satwa pertama</a>
                     </td>
                 </tr>
                 {% endfor %}
@@ -82,6 +103,26 @@
 
     .add-button:hover {
         background-color: #6a7339;
+    }
+
+    /* Alert Messages */
+    .alert {
+        padding: 10px 15px;
+        margin-bottom: 20px;
+        border-radius: 4px;
+        border: 1px solid transparent;
+    }
+
+    .alert-success {
+        color: #3c763d;
+        background-color: #dff0d8;
+        border-color: #d6e9c6;
+    }
+
+    .alert-error {
+        color: #a94442;
+        background-color: #f2dede;
+        border-color: #ebccd1;
     }
 
     .table-container {
@@ -146,6 +187,28 @@
 
     .delete-button:hover {
         background-color: #b58a60;
+    }
+
+    /* Responsif untuk layar kecil */
+    @media (max-width: 768px) {
+        .habitat-container {
+            margin: 20px 10px;
+            padding: 15px;
+        }
+
+        .page-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .table-container {
+            overflow-x: scroll;
+        }
+
+        .habitat-table {
+            min-width: 800px;
+        }
     }
 </style>
 {% endblock %}

@@ -1,29 +1,63 @@
+from ast import Dict, List
+from typing import Any, Optional, List, Dict
+import uuid
+from datetime import datetime
+from supabase_client import supabase
 from django.shortcuts import render, redirect
 from django.http import HttpResponseRedirect
 from django.urls import reverse_lazy
-from django.views.generic import ListView, CreateView, UpdateView, DeleteView
-from django.shortcuts import render, redirect
-from django.http import HttpResponseRedirect
-from django.urls import reverse_lazy
+from django.views.generic import ListView
 from django.views import View
+from django.contrib import messages
 from .forms import AnimalForm
+from supabase_utils import (
+    get_all_hewan,
+    get_hewan_by_id
+)
 
-# Data Hardcode
-animals_data = [
-    {'id': 1, 'name': 'Simba', 'species': 'Singa', 'origin': 'Afrika', 'birth_date': '2018-05-12', 'health_status': 'Sehat', 'habitat': 'Savana', 'photo_url': '[foto simba]'},
-    {'id': 2, 'name': 'Melly', 'species': 'Gajah', 'origin': 'Sumatra', 'birth_date': '2015-09-22', 'health_status': 'Dalam Pemantauan', 'habitat': 'Hutan Tropis', 'photo_url': '[foto melly]'},
-    {'id': 3, 'name': 'Rio', 'species': 'Harimau', 'origin': 'Kalimantan', 'birth_date': '2015-09-22', 'health_status': 'Sakit', 'habitat': 'Hutan Tropis', 'photo_url': '[foto rio]'},
-    {'id': 4, 'name': 'Nala', 'species': 'Zebra', 'origin': 'Afrika', 'birth_date': '2020-03-01', 'health_status': 'Sehat', 'habitat': 'Savana', 'photo_url': '[foto nala]'},
-    {'id': 5, 'name': 'Bimo', 'species': 'Orangutan', 'origin': 'Kalimantan', 'birth_date': '2016-07-19', 'health_status': 'Sehat', 'habitat': 'Hutan Tropis', 'photo_url': '[foto bimo]'}
-]
+# Animal related function
+def create_animal(data: Dict[str, Any]) -> Dict[str, Any]:
+    """Create a new animal record"""
+    # Generate UUID for new animal
+    data['id'] = str(uuid.uuid4())
+    return supabase.table('hewan').insert(data).execute().data[0]
 
-class AnimalListView(ListView):
-    # Tidak menggunakan model, hanya menggunakan data statis
+def update_animal(id_hewan: str, data: Dict[str, Any]) -> Dict[str, Any]:
+    """Update animal data"""
+    return supabase.table('hewan').update(data).eq('id', id_hewan).execute().data[0]
+
+def delete_animal(id_hewan: str) -> None:
+    """Delete animal and related records"""
+    # Delete related records first
+    supabase.table('catatan_medis').delete().eq('id_hewan', id_hewan).execute()
+    supabase.table('pakan').delete().eq('id_hewan', id_hewan).execute()
+    supabase.table('memberi').delete().eq('id_hewan', id_hewan).execute()
+    supabase.table('berpartisipasi').delete().eq('id_hewan', id_hewan).execute()
+    supabase.table('jadwal_pemeriksaan_kesehatan').delete().eq('id_hewan', id_hewan).execute()
+    supabase.table('adopsi').delete().eq('id_hewan', id_hewan).execute()
+    
+    # Finally delete the animal record
+    supabase.table('hewan').delete().eq('id', id_hewan).execute()
+
+def get_animals_with_habitat() -> List[Dict[str, Any]]:
+    """Get all animals with habitat information"""
+    return supabase.table('hewan').select('*, habitat:nama_habitat(*)').execute().data
+
+#func
+class AnimalListView(View):
     template_name = 'animals/animal_list.html'
-    context_object_name = 'animals'
 
-    def get_queryset(self):
-        return animals_data
+    def get(self, request):
+        try:
+            animals = get_animals_with_habitat()
+            context = {
+                'animals': animals
+            }
+            return render(request, self.template_name, context)
+        except Exception as e:
+            messages.error(request, f'Error mengambil data satwa: {str(e)}')
+            context = {'animals': []}
+            return render(request, self.template_name, context)
 
 class AnimalCreateView(View):
     template_name = 'animals/animal_form.html'
@@ -40,62 +74,141 @@ class AnimalCreateView(View):
     def post(self, request):
         form = AnimalForm(request.POST)
         if form.is_valid():
-            # Skip saving data, directly redirect
-            return HttpResponseRedirect(reverse_lazy('animals:animal_list'))
+            try:
+                # Prepare data for Supabase
+                animal_data = {
+                    'nama': form.cleaned_data['name'],
+                    'spesies': form.cleaned_data['species'],
+                    'asal_hewan': form.cleaned_data['origin'],
+                    'tanggal_lahir': form.cleaned_data['birth_date'].isoformat() if form.cleaned_data['birth_date'] else None,
+                    'status_kesehatan': form.cleaned_data['health_status'],
+                    'nama_habitat': form.cleaned_data['habitat'],
+                    'url_foto': form.cleaned_data['photo_url']
+                }
+                
+                # Create animal in Supabase
+                create_animal(animal_data)
+                messages.success(request, 'Data satwa berhasil ditambahkan!')
+                return HttpResponseRedirect(reverse_lazy('animals:animal_list'))
+                
+            except Exception as e:
+                messages.error(request, f'Error menambahkan data satwa: {str(e)}')
+        
         context = {
             'form': form,
             'title': 'FORM TAMBAH DATA SATWA',
             'is_add': True
         }
         return render(request, self.template_name, context)
-    
+
 class AnimalUpdateView(View):
     template_name = 'animals/animal_form.html'
 
     def get(self, request, pk):
-        # Ambil objek berdasarkan ID dari data statis
-        animal = next((item for item in animals_data if item["id"] == pk), None)
-        
-        if animal is None:
-            return redirect('animals:animal_list')
+        try:
+            # Get animal data from Supabase
+            animal_data = get_hewan_by_id(pk)
+            
+            if not animal_data:
+                messages.error(request, 'Data satwa tidak ditemukan!')
+                return redirect('animals:animal_list')
 
-        form = AnimalForm(initial=animal)  # Isi form dengan data statis
-        context = {
-            'form': form,
-            'title': 'FORM EDIT DATA SATWA',
-            'is_add': False,
-            'animal': animal
-        }
-        return render(request, self.template_name, context)
+            # Prepare initial data for form
+            initial_data = {
+                'name': animal_data.get('nama'),
+                'species': animal_data.get('spesies'),
+                'origin': animal_data.get('asal_hewan'),
+                'birth_date': animal_data.get('tanggal_lahir'),
+                'health_status': animal_data.get('status_kesehatan'),
+                'habitat': animal_data.get('nama_habitat'),
+                'photo_url': animal_data.get('url_foto')
+            }
+
+            form = AnimalForm(initial=initial_data)
+            context = {
+                'form': form,
+                'title': 'FORM EDIT DATA SATWA',
+                'is_add': False,
+                'animal': animal_data
+            }
+            return render(request, self.template_name, context)
+            
+        except Exception as e:
+            messages.error(request, f'Error mengambil data satwa: {str(e)}')
+            return redirect('animals:animal_list')
 
     def post(self, request, pk):
-        # Ambil objek berdasarkan ID dari data statis
-        animal = next((item for item in animals_data if item["id"] == pk), None)
+        try:
+            # Get existing animal data
+            animal_data = get_hewan_by_id(pk)
+            
+            if not animal_data:
+                messages.error(request, 'Data satwa tidak ditemukan!')
+                return redirect('animals:animal_list')
 
-        if animal is None:
+            form = AnimalForm(request.POST)
+            if form.is_valid():
+                # Prepare updated data for Supabase
+                updated_data = {
+                    'nama': form.cleaned_data['name'],
+                    'spesies': form.cleaned_data['species'],
+                    'asal_hewan': form.cleaned_data['origin'],
+                    'tanggal_lahir': form.cleaned_data['birth_date'].isoformat() if form.cleaned_data['birth_date'] else None,
+                    'status_kesehatan': form.cleaned_data['health_status'],
+                    'nama_habitat': form.cleaned_data['habitat'],
+                    'url_foto': form.cleaned_data['photo_url']
+                }
+                
+                # Update animal in Supabase
+                update_animal(pk, updated_data)
+                messages.success(request, 'Data satwa berhasil diperbarui!')
+                return HttpResponseRedirect(reverse_lazy('animals:animal_list'))
+
+            context = {
+                'form': form,
+                'title': 'FORM EDIT DATA SATWA',
+                'is_add': False,
+                'animal': animal_data
+            }
+            return render(request, self.template_name, context)
+            
+        except Exception as e:
+            messages.error(request, f'Error memperbarui data satwa: {str(e)}')
             return redirect('animals:animal_list')
 
-        form = AnimalForm(request.POST)
-        if form.is_valid():
-            # Lewati update data, langsung redirect
-            return HttpResponseRedirect(reverse_lazy('animals:animal_list'))
-
-        context = {
-            'form': form,
-            'title': 'FORM EDIT DATA SATWA',
-            'is_add': False,
-            'animal': animal
-        }
-        return render(request, self.template_name, context)
-    
-class AnimalDeleteView(DeleteView):
+class AnimalDeleteView(View):
     template_name = 'animals/animal_confirm_delete.html'
 
     def get(self, request, pk):
-        # Temukan data berdasarkan ID dari data statis
-        animal = next((item for item in animals_data if item["id"] == pk), None)
-        return render(request, 'animals/animal_confirm_delete.html', {'object': animal})
+        try:
+            # Get animal data from Supabase
+            animal_data = get_hewan_by_id(pk)
+            
+            if not animal_data:
+                messages.error(request, 'Data satwa tidak ditemukan!')
+                return redirect('animals:animal_list')
+            
+            context = {'object': animal_data}
+            return render(request, self.template_name, context)
+            
+        except Exception as e:
+            messages.error(request, f'Error mengambil data satwa: {str(e)}')
+            return redirect('animals:animal_list')
 
     def post(self, request, pk):
-        # Lewati penghapusan data, langsung redirect
-        return redirect('animals:animal_list')
+        try:
+            # Check if animal exists
+            animal_data = get_hewan_by_id(pk)
+            
+            if not animal_data:
+                messages.error(request, 'Data satwa tidak ditemukan!')
+                return redirect('animals:animal_list')
+            
+            # Delete animal from Supabase
+            delete_animal(pk)
+            messages.success(request, f'Data satwa "{animal_data.get("nama", "")}" berhasil dihapus!')
+            return redirect('animals:animal_list')
+            
+        except Exception as e:
+            messages.error(request, f'Error menghapus data satwa: {str(e)}')
+            return redirect('animals:animal_list')
