@@ -21,16 +21,16 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include(('main.urls', 'main'), namespace='main')),
-    path('animals/', include(('animals.urls', 'animals'), namespace='animals')),
-    path('habitats/', include(('habitats.urls', 'habitats'), namespace='habitats')),
-    path('medical/', include(('medical.urls', 'medical'), namespace='medical')),
-    path('feeding/', include(('feeding.urls', 'feeding'), namespace='feeding')),
-    path('attractions/', include(('attractions.urls', 'attractions'), namespace='attractions')),
-    path('tickets/', include(('tickets.urls', 'tickets'), namespace='tickets')),
-    path('adoptions/', include(('adoptions.urls', 'adoptions'), namespace='adoptions')),
-    path('administrative-staff/', include(('administrative_staff.urls', 'administrative_staff'), namespace='administrative_staff')),
-    path('adopter/', include(('adopter.urls', 'adopter'), namespace='adopter')),
+    path('', include('main.urls')),
+    path('animals/', include('animals.urls')),
+    path('habitats/', include('habitats.urls')),
+    path('medical/', include('medical.urls')),
+    path('feeding/', include('feeding.urls')),
+    path('attractions/', include('attractions.urls')),
+    path('tickets/', include('tickets.urls')),
+    path('adoptions/', include('adoptions.urls')),
+    path('administrative-staff/', include('administrative_staff.urls')),
+    path('adopter/', include('adopter.urls')),
 ]
 
 if settings.DEBUG:
