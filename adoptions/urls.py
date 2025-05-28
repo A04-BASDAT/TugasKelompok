@@ -1,3 +1,8 @@
 from django.urls import path
+from . import views
 
-urlpatterns = []
+app_name = 'adoptions'
+
+urlpatterns = [
+    # Add adoption-related URLs here when views are implemented
+]
