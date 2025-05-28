@@ -24,14 +24,15 @@ urlpatterns = [
     path('', include('main.urls')),
     path('animals/', include('animals.urls')),
     path('habitats/', include('habitats.urls')),
-    path('medical/', include('medical.urls')),
-    path('feeding/', include('feeding.urls')),
+    path('medical/', include(('medical.urls', 'medical'), namespace='medical')),
+    path('feeding/', include(('feeding.urls', 'feeding'), namespace='feeding')),
     path('attractions/', include('attractions.urls')),
     path('tickets/', include('tickets.urls')),
     path('adoptions/', include('adoptions.urls')),
     path('administrative-staff/', include('administrative_staff.urls')),
     path('adopter/', include('adopter.urls')),
-    path('feeding/', include(('feeding.urls', 'feeding'), namespace='feeding')),
-    path('medical/', include(('medical.urls', 'medical'), namespace='medical')),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
