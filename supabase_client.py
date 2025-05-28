@@ -1,10 +1,16 @@
 import os
 from supabase import create_client, Client
 from dotenv import load_dotenv
+from pathlib import Path
+
+# Build paths inside the project like this: BASE_DIR / 'subdir'
+BASE_DIR = Path(__file__).resolve().parent
 
 print("Current working directory:", os.getcwd())
+print("Base directory:", BASE_DIR)
 
-load_dotenv()
+# Load .env file
+load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 url: str = os.environ.get("SUPABASE_URL")
 key: str = os.environ.get("SUPABASE_KEY")
