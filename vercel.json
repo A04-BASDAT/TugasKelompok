@@ -1,7 +1,7 @@
 {
     "builds": [{
         "src": "tugas_kelompok_basdat/wsgi.py",
-        "use": "@vercel/python",
+        "use": "@ardnt/vercel-python-wsgi",
         "config": { "maxLambdaSize": "15mb" }
     }],
     "routes": [
