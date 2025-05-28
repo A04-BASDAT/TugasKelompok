@@ -7,6 +7,15 @@
         <a href="{% url 'animals:animal_list' %}" class="back-button">Kembali ke Daftar</a>
     </div>
     
+    <!-- Display Messages -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+    
     <div class="delete-container">
         <div class="delete-message">
             <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#a67c52" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -14,10 +23,10 @@
                 <line x1="12" y1="8" x2="12" y2="12"></line>
                 <line x1="12" y1="16" x2="12.01" y2="16"></line>
             </svg>
-            <p class="confirm-text">Apakah Anda yakin ingin menghapus satwa "<strong>{{ object.name }}</strong>"?</p>
+            <p class="confirm-text">Apakah Anda yakin ingin menghapus satwa "<strong>{{ object.nama|default:"Tidak Diketahui" }}</strong>"?</p>
         </div>
         
-        {% if object.habitat %}
+        {% if object.nama_habitat %}
         <div class="warning-alert">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
@@ -26,10 +35,22 @@
             </svg>
             <div>
                 <strong>Perhatian!</strong> 
-                <p>Satwa ini terhubung dengan habitat <strong>{{ object.habitat.name }}</strong>. Menghapus satwa ini akan mempengaruhi data habitat tersebut.</p>
+                <p>Satwa ini terhubung dengan habitat {{ object.nama_habitat }}. Menghapus satwa ini akan mempengaruhi data habitat tersebut.</p>
             </div>
         </div>
         {% endif %}
+        
+        <div class="warning-alert danger">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                <line x1="12" y1="9" x2="12" y2="13"></line>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+            <div>
+                <strong>Tindakan ini tidak dapat dibatalkan!</strong> 
+                <p>Menghapus satwa ini juga akan menghapus semua data terkait seperti catatan medis, jadwal pakan, dan data adopsi.</p>
+            </div>
+        </div>
         
         <form method="post">
             {% csrf_token %}

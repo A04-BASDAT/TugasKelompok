@@ -37,7 +37,7 @@
     <div class="animal-section">
         <div class="section-header">
             <h2>Daftar Hewan dalam Habitat</h2>
-            <a href="#" class="add-button">+ Tambah Hewan</a>
+            <a href="{% url 'animals:animal_add' %}" class="add-button">+ Tambah Hewan</a>
         </div>
         
         <div class="table-container">
@@ -51,35 +51,6 @@
                         <th>Status Kesehatan</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr>
-                        <td>Simba</td>
-                        <td>Singa</td>
-                        <td>Afrika</td>
-                        <td>2018-05-12</td>
-                        <td>
-                            <span class="health-badge health-sehat">Sehat</span>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Nala</td>
-                        <td>Zebra</td>
-                        <td>Afrika</td>
-                        <td>2020-03-01</td>
-                        <td>
-                            <span class="health-badge health-sehat">Sehat</span>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Rio</td>
-                        <td>Harimau</td>
-                        <td>Kalimantan</td>
-                        <td>2020-03-03</td>
-                        <td>
-                            <span class="health-badge health-sakit">Sakit</span>
-                        </td>
-                    </tr>
-                </tbody>
             </table>            
         </div>
     </div>
