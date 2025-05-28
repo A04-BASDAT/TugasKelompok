@@ -23,7 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-0l^)@ts7aq-e^y7m=30k&3^s-p+-&aq(4ba1tf9vqg%1s!+k=$'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['127.0.0.1', '.vercel.app', 'localhost']
 
@@ -31,7 +31,6 @@ ALLOWED_HOSTS = ['127.0.0.1', '.vercel.app', 'localhost']
 # Application definitio
 
 INSTALLED_APPS = [
-    'whitenoise.runserver_nostatic',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -70,6 +69,7 @@ TEMPLATES = [
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
