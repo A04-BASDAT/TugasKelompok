@@ -170,36 +170,20 @@ def create_adopsi(data: Dict[str, Any]) -> Dict[str, Any]:
     return supabase.table('adopsi').insert(data).execute().data[0]
 
 def create_adopter(data: Dict[str, Any]) -> Dict[str, Any]:
-    """Create a new adopter record"""
     return supabase.table('adopter').insert(data).execute().data[0]
 
 def create_individu(data: Dict[str, Any]) -> Dict[str, Any]:
-    """Create a new individual adopter record"""
     return supabase.table('individu').insert(data).execute().data[0]
 
 def create_organisasi(data: Dict[str, Any]) -> Dict[str, Any]:
-    """Create a new organization adopter record"""
     return supabase.table('organisasi').insert(data).execute().data[0]
 
 def create_complete_adopter(adopter_data: Dict[str, Any], type_data: Dict[str, Any], is_individual: bool = True) -> Dict[str, Any]:
-    """
-    Create a complete adopter record with associated individual/organization data
-    
-    Args:
-        adopter_data: Dictionary containing adopter table data
-        type_data: Dictionary containing individu/organisasi table data
-        is_individual: Boolean indicating if adopter is individual (True) or organization (False)
-    
-    Returns:
-        Dictionary containing the created adopter data
-    """
-    # First create the adopter record
+
     adopter = create_adopter(adopter_data)
     
-    # Add the id_adopter to the type data
     type_data['id_adopter'] = adopter['id_adopter']
     
-    # Create the associated record based on type
     if is_individual:
         individu = create_individu(type_data)
         return {**adopter, 'detail': individu}
@@ -231,21 +215,12 @@ def delete_adopsi(id_adopsi: str) -> Dict[str, Any]:
     return supabase.table('adopsi').delete().eq('id_adopsi', id_adopsi).execute().data[0]
 
 def delete_adopter(id_adopter: str) -> None:
-    """
-    Delete an adopter and all related records.
-    This will delete:
-    1. All adoption records for this adopter
-    2. The individu/organisasi record
-    3. The adopter record itself
-    """
-    # First delete all adoptions
+
     supabase.table('adopsi').delete().eq('id_adopter', id_adopter).execute()
     
-    # Delete from individu and organisasi (one of them will succeed)
     supabase.table('individu').delete().eq('id_adopter', id_adopter).execute()
     supabase.table('organisasi').delete().eq('id_adopter', id_adopter).execute()
     
-    # Finally delete the adopter record
     supabase.table('adopter').delete().eq('id_adopter', id_adopter).execute()
 
 def delete_reservasi(username_p: str, tanggal: str) -> Dict[str, Any]:
