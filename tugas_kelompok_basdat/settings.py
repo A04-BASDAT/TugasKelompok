@@ -25,12 +25,23 @@ load_dotenv()
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-0l^)@ts7aq-e^y7m=30k&3^s-p+-&aq(4ba1tf9vqg%1s!+k=$'
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-0l^)@ts7aq-e^y7m=30k&3^s-p+-&aq(4ba1tf9vqg%1s!+k=$')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = ['127.0.0.1', '.vercel.app', 'localhost']
+ALLOWED_HOSTS = [
+    '127.0.0.1',
+    '.vercel.app',
+    'localhost',
+    'tugaskelompok-production.up.railway.app',
+    '.railway.app'
+]
+
+# Security settings
+SECURE_SSL_REDIRECT = os.environ.get('DJANGO_SECURE_SSL_REDIRECT', 'False') == 'True'
+SESSION_COOKIE_SECURE = os.environ.get('DJANGO_SESSION_COOKIE_SECURE', 'False') == 'True'
+CSRF_COOKIE_SECURE = os.environ.get('DJANGO_CSRF_COOKIE_SECURE', 'False') == 'True'
 
 
 # Application definition
