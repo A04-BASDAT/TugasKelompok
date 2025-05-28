@@ -43,6 +43,21 @@ SECURE_SSL_REDIRECT = os.environ.get('DJANGO_SECURE_SSL_REDIRECT', 'False') == '
 SESSION_COOKIE_SECURE = os.environ.get('DJANGO_SESSION_COOKIE_SECURE', 'False') == 'True'
 CSRF_COOKIE_SECURE = os.environ.get('DJANGO_CSRF_COOKIE_SECURE', 'False') == 'True'
 
+# CSRF and CORS Settings
+CSRF_TRUSTED_ORIGINS = [
+    'https://tugaskelompok-production.up.railway.app',
+    'https://*.railway.app'
+]
+
+CORS_ALLOWED_ORIGINS = [
+    'https://tugaskelompok-production.up.railway.app',
+]
+
+CORS_ALLOW_CREDENTIALS = True
+CSRF_COOKIE_HTTPONLY = False  # False agar JavaScript bisa mengakses cookie CSRF
+CSRF_USE_SESSIONS = True  # Menggunakan session untuk CSRF
+CSRF_COOKIE_SAMESITE = 'Lax'  # Nilai 'Lax' lebih aman untuk production
+
 
 # Application definition
 
@@ -53,6 +68,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders',
     'main',
     'animals',
     'habitats',
@@ -68,6 +84,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
