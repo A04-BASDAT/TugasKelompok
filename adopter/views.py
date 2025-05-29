@@ -3,13 +3,15 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse, HttpResponse
 from django.template.defaulttags import register
 from django.http import HttpResponseForbidden
+from django.views.decorators.csrf import csrf_exempt
 from main.views import login_required_custom
 from supabase_utils import (
     get_all_adopsi, get_all_hewan, get_all_adopter,
     get_all_individu, get_all_organisasi, get_all_catatan_medis,
     get_hewan_by_id, get_individu_by_id, get_organisasi_by_id,
     get_adopter_by_username,
-    get_catatan_medis_by_id
+    get_catatan_medis_by_id,
+    update_adopsi, update_adopter
 )
 
 @register.filter
@@ -356,30 +358,80 @@ def animal_health_report(request, animal_id):
     return render(request, 'adopter/animal_health_report.html', context)
 
 @login_required_custom
+@csrf_exempt
 def extend_adoption(request, animal_id):
     adopter = get_adopter_by_username(request.session['username'])
     if not adopter:
-        return redirect('main:show_main')
+        return JsonResponse({'success': False, 'error': 'User bukan adopter'}, status=403)
 
     animal = get_hewan_by_id(animal_id)
     if not animal:
-        return HttpResponse("Hewan tidak ditemukan", status=404)
+        return JsonResponse({'success': False, 'error': 'Hewan tidak ditemukan'}, status=404)
+
+    # Use validated animal ID
+    validated_animal_id = str(animal['id'])
 
     # Get adoption info
     adoptions = get_all_adopsi()
     adoption = None
     for a in adoptions:
-        if a['id_hewan'] == animal_id and a['id_adopter'] == adopter['id_adopter']:
+        if a['id_hewan'] == validated_animal_id and a['id_adopter'] == adopter['id_adopter']:
             adoption = a
             break
 
     if not adoption:
-        return HttpResponse("Data adopsi tidak ditemukan", status=404)
+        return JsonResponse({'success': False, 'error': 'Data adopsi tidak ditemukan'}, status=404)
+
+    # Check payment status
+    if adoption.get('status_pembayaran', '').lower() != 'lunas':
+        return JsonResponse({
+            'success': False, 
+            'error': 'Pembayaran adopsi saat ini belum lunas. Harap lunasi terlebih dahulu sebelum memperpanjang.'
+        }, status=400)
 
     if request.method == 'POST':
-        # Handle extension logic here
-        return redirect('adopter:adoption_program')
+        try:
+            data = json.loads(request.body)
+            period_months = int(data.get('period_months', 3))
+            contribution = int(data.get('contribution', 0))
+            
+            # Calculate new end date
+            from datetime import datetime, timedelta
+            from dateutil.relativedelta import relativedelta
+            
+            current_end_date = adoption['tgl_berhenti_adopsi']
+            if isinstance(current_end_date, str):
+                current_end_date = datetime.strptime(current_end_date, '%Y-%m-%d').date()
+            
+            # Extend from current end date
+            new_end_date = current_end_date + relativedelta(months=period_months)
+            
+            # Update adoption data
+            updated_adoption_data = {
+                'tgl_berhenti_adopsi': new_end_date.strftime('%Y-%m-%d'),
+                'kontribusi_finansial': adoption.get('kontribusi_finansial', 0) + contribution,
+                'status_pembayaran': 'tertunda'  # Reset to pending for new contribution
+            }
+            
+            # Update adoption in database
+            update_adopsi(adopter['id_adopter'], validated_animal_id, updated_adoption_data)
+            
+            # Update adopter's total contribution
+            new_total_contribution = adopter.get('total_kontribusi', 0) + contribution
+            update_adopter(adopter['id_adopter'], {'total_kontribusi': new_total_contribution})
+            
+            return JsonResponse({
+                'success': True, 
+                'message': f'Adopsi berhasil diperpanjang hingga {new_end_date.strftime("%d %B %Y")}',
+                'new_end_date': new_end_date.strftime('%Y-%m-%d'),
+                'total_contribution': contribution
+            })
+            
+        except Exception as e:
+            print(f"[ERROR] Extend adoption error: {str(e)}")
+            return JsonResponse({'success': False, 'error': f'Terjadi kesalahan: {str(e)}'}, status=500)
 
+    # GET request - return form data
     context = {
         'animal': animal,
         'adoption': adoption,

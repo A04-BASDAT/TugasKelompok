@@ -330,10 +330,10 @@
                     </div>
                 </div>
 
-                <form class="space-y-4">
+                <form id="extendAdoptionForm-{{ item.animal.id }}" class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Periode Perpanjangan</label>
-                        <select class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#586132] focus:border-[#586132]">
+                        <select name="period_months" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#586132] focus:border-[#586132]">
                             <option value="3">3 bulan</option>
                             <option value="6">6 bulan</option>
                             <option value="12">12 bulan</option>
@@ -342,7 +342,7 @@
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Nominal Kontribusi (Rp)</label>
-                        <input type="text" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#586132] focus:border-[#586132]" placeholder="Masukkan nominal kontribusi">
+                        <input type="number" name="contribution" min="0" step="1000" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#586132] focus:border-[#586132]" placeholder="Masukkan nominal kontribusi" required>
                     </div>
 
                     <div class="bg-[#f3f4eb] p-3 rounded-lg border border-[#586132]">
@@ -355,7 +355,7 @@
                         <button type="button" onclick="closeModal('extendAdoptionModal-{{ item.animal.id }}')" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 font-medium">
                             Batal
                         </button>
-                        <button type="button" class="px-4 py-2 bg-[#586132] text-white rounded-lg hover:bg-[#3d4222] font-medium">
+                        <button type="submit" class="px-4 py-2 bg-[#586132] text-white rounded-lg hover:bg-[#3d4222] font-medium">
                             Perpanjang Adopsi
                         </button>
                     </div>
@@ -399,10 +399,10 @@
                     </div>
                 </div>
 
-                <form class="space-y-4">
+                <form id="extendAdoptionForm-{{ item.animal.id }}" class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Periode Perpanjangan</label>
-                        <select class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#586132] focus:border-[#586132]">
+                        <select name="period_months" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#586132] focus:border-[#586132]">
                             <option value="3">3 bulan</option>
                             <option value="6">6 bulan</option>
                             <option value="12">12 bulan</option>
@@ -411,7 +411,7 @@
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Nominal Kontribusi (Rp)</label>
-                        <input type="text" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#586132] focus:border-[#586132]" placeholder="Masukkan nominal kontribusi">
+                        <input type="number" name="contribution" min="0" step="1000" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#586132] focus:border-[#586132]" placeholder="Masukkan nominal kontribusi" required>
                     </div>
 
                     <div class="bg-[#f3f4eb] p-3 rounded-lg border border-[#586132]">
@@ -424,7 +424,7 @@
                         <button type="button" onclick="closeModal('extendAdoptionModal-{{ item.animal.id }}')" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 font-medium">
                             Batal
                         </button>
-                        <button type="button" class="px-4 py-2 bg-[#586132] text-white rounded-lg hover:bg-[#3d4222] font-medium">
+                        <button type="submit" class="px-4 py-2 bg-[#586132] text-white rounded-lg hover:bg-[#3d4222] font-medium">
                             Perpanjang Adopsi
                         </button>
                     </div>
@@ -572,6 +572,115 @@
                 }
             }, 10000 + (index * 1000)); // Stagger the auto-close timing
         });
+
+        // Handle extend adoption form submissions
+        const extendForms = document.querySelectorAll('[id^="extendAdoptionForm-"]');
+        extendForms.forEach(form => {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const animalId = form.id.replace('extendAdoptionForm-', '');
+                const formData = new FormData(form);
+                const periodMonths = formData.get('period_months');
+                const contribution = formData.get('contribution');
+                
+                if (!contribution || contribution <= 0) {
+                    showToast('Harap masukkan nominal kontribusi yang valid', 'error');
+                    return;
+                }
+                
+                // Disable submit button
+                const submitBtn = form.querySelector('button[type="submit"]');
+                const originalText = submitBtn.textContent;
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Memproses...';
+                
+                // Send AJAX request
+                fetch(`/adopter/extend-adoption/${animalId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        period_months: parseInt(periodMonths),
+                        contribution: parseInt(contribution)
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast(data.message, 'success');
+                        closeModal('extendAdoptionModal-' + animalId);
+                        
+                        // Refresh page after 2 seconds to show updated data
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 2000);
+                    } else {
+                        showToast(data.error || 'Terjadi kesalahan saat memperpanjang adopsi', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showToast('Terjadi kesalahan saat memperpanjang adopsi', 'error');
+                })
+                .finally(() => {
+                    // Re-enable submit button
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
+                });
+            });
+        });
     });
+
+    // Function to get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Function to show toast notifications
+    function showToast(message, type = 'success') {
+        // Remove existing toasts
+        const existingToasts = document.querySelectorAll('.toast-notification');
+        existingToasts.forEach(toast => toast.remove());
+        
+        const toast = document.createElement('div');
+        toast.className = `toast-notification fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 max-w-sm ${
+            type === 'error' ? 'bg-red-500 text-white' : 'bg-green-500 text-white'
+        }`;
+        
+        toast.innerHTML = `
+            <div class="flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    ${type === 'error' 
+                        ? '<path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>'
+                        : '<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>'
+                    }
+                </svg>
+                <span>${message}</span>
+            </div>
+        `;
+        
+        document.body.appendChild(toast);
+        
+        // Auto hide after 5 seconds
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.remove();
+            }
+        }, 5000);
+    }
 </script>
 {% endblock %}
