@@ -3,58 +3,139 @@
 {% block content %}
 <div class="habitat-detail-container">
     <div class="page-header">
-        <h1>DETAIL HABITAT: SAVANA</h1>
+        <h1>DETAIL HABITAT: {{ habitat.nama|upper }}</h1>
         <div class="header-actions">
-            <a href="{% url 'habitats:habitat_edit' 1 %}" class="action-button edit-button">Edit Habitat</a>
-            <a href="{% url 'habitats:habitat_delete' 1 %}" class="action-button delete-button">Hapus Habitat</a>
+            <a href="{% url 'habitats:habitat_edit' habitat.nama %}" class="action-button edit-button">Edit Habitat</a>
+            <a href="{% url 'habitats:habitat_delete' habitat.nama %}" class="action-button delete-button">Hapus Habitat</a>
             <a href="{% url 'habitats:habitat_list' %}" class="action-button back-button">Kembali ke Daftar</a>
         </div>
     </div>
-    
+
     <div class="detail-section">
         <h2>Informasi Habitat</h2>
         <table class="detail-table">
             <tr>
-                <th>Luas Area</th>
-                <td>5.000 m²</td>
+                <th>Nama Habitat</th>
+                <td>{{ habitat.nama }}</td>
             </tr>
             <tr>
-                <th>Status Lingkungan</th>
-                <td>
-                    <span class="status-badge status-baik">Baik</span>
-                    <div class="status-details">
-                        Suhu: 30°C, Kelembapan: 40%, Vegetasi: Rumput luas
-                    </div>
-                </td>
+                <th>Luas Area</th>
+                <td>{{ habitat.luas_area }} m²</td>
             </tr>
             <tr>
                 <th>Kapasitas Maksimal</th>
-                <td>25 hewan</td>
+                <td>{{ habitat.kapasitas }} hewan</td>
+            </tr>
+            <tr>
+                <th>Status</th>
+                <td>
+                    <span class="status-badge bg-info">{{ habitat.status }}</span>
+                </td>
+            </tr>
+            <tr>
+                <th>Utilisasi</th>
+                <td>
+                    <div class="progress">
+                        <div class="progress-bar bg-success" role="progressbar" 
+                             style="width: {% widthratio animals|length habitat.kapasitas 100 %}%"
+                             aria-valuenow="{{ animals|length }}" 
+                             aria-valuemin="0" 
+                             aria-valuemax="{{ habitat.kapasitas }}">
+                            {{ animals|length }}/{{ habitat.kapasitas }}
+                        </div>
+                    </div>
+                </td>
             </tr>
         </table>
     </div>
-    
+
     <div class="animal-section">
         <div class="section-header">
-            <h2>Daftar Hewan dalam Habitat</h2>
-            <a href="{% url 'animals:animal_add' %}" class="add-button">+ Tambah Hewan</a>
+            <h2>Daftar Hewan dalam Habitat ({{ animals|length }} hewan)</h2>
+            {% if animals|length < habitat.kapasitas %}
+            <a href="{% url 'animals:animal_add' %}" class="add-button action-button">+ Tambah Hewan</a>
+            {% else %}
+            <span class="badge bg-warning">Kapasitas Penuh</span>
+            {% endif %}
         </div>
-        
+
         <div class="table-container">
+            {% if animals %}
             <table class="animal-table">
                 <thead>
                     <tr>
-                        <th>Nama Individu</th>
+                        <th>Nama</th>
                         <th>Spesies</th>
-                        <th>Asal Hewan</th>
-                        <th>Tanggal Lahir</th>
-                        <th>Status Kesehatan</th>
+                        <th>Asal</th>
+                        <th>Lahir</th>
+                        <th>Kesehatan</th>
                     </tr>
                 </thead>
-            </table>            
+                <tbody>
+                    {% for animal in animals %}
+                    <tr>
+                        <td>
+                            <strong>{{ animal.nama|default:"Tanpa Nama" }}</strong>
+                            <br>
+                            <small class="text-muted">ID: {{ animal.id|slice:":8" }}...</small>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">{{ animal.spesies }}</span>
+                        </td>
+                        <td>{{ animal.asal_hewan }}</td>
+                        <td>
+                            {% if animal.tanggal_lahir %}
+                                {{ animal.tanggal_lahir }}
+                            {% else %}
+                                <em class="text-muted">Tidak diketahui</em>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if animal.status_kesehatan == 'Sehat' %}
+                                <span class="badge bg-success">{{ animal.status_kesehatan }}</span>
+                            {% elif animal.status_kesehatan == 'Sakit' %}
+                                <span class="badge bg-danger">{{ animal.status_kesehatan }}</span>
+                            {% else %}
+                                <span class="badge bg-warning">{{ animal.status_kesehatan }}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-paw fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">Belum ada hewan dalam habitat ini</h5>
+                <p class="text-muted">Habitat siap menampung hingga {{ habitat.kapasitas }} hewan</p>
+            </div>
+            {% endif %}
         </div>
     </div>
-    
+
+    {% if animals %}
+    <div class="stats-section">
+        <h2>Statistik Habitat</h2>
+        <div class="stats-grid">
+            <div class="stats-card">
+                <h3 class="stats-value">{{ animals|length }}</h3>
+                <p class="stats-label">Total Hewan</p>
+            </div>
+            <div class="stats-card">
+                <h3 class="stats-value">{% widthratio animals|length habitat.kapasitas 100 %}%</h3>
+                <p class="stats-label">Utilisasi</p>
+            </div>
+            <div class="stats-card">
+                <h3 class="stats-value">{{ animals|length }}</h3>
+                <p class="stats-label">Spesies Berbeda</p>
+            </div>
+            <div class="stats-card">
+                <h3 class="stats-value">{{ habitat.luas_area }}</h3>
+                <p class="stats-label">m² Area</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
 
 <style>
@@ -67,7 +148,7 @@
         border-radius: 8px;
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     }
-    
+
     .page-header {
         display: flex;
         justify-content: space-between;
@@ -77,31 +158,29 @@
         border-bottom: 2px solid #586132;
         flex-wrap: wrap;
     }
-    
+
     h1 {
         color: #586132;
         margin: 0;
         font-size: 24px;
         font-weight: bold;
-        margin-right: 20px;
-        margin-bottom: 10px;
     }
-    
+
     .header-actions {
         display: flex;
         gap: 10px;
         flex-wrap: wrap;
     }
-    
+
     h2 {
         color: #586132;
         font-size: 18px;
         margin-top: 0;
         margin-bottom: 15px;
     }
-    
-    .detail-section, 
-    .animal-section, 
+
+    .detail-section,
+    .animal-section,
     .stats-section {
         background-color: white;
         border: 1px solid #e0cfc2;
@@ -109,38 +188,33 @@
         padding: 20px;
         margin-bottom: 20px;
     }
-    
+
     .section-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-bottom: 15px;
     }
-    
+
     .detail-table {
         width: 100%;
         border-collapse: collapse;
     }
-    
-    .detail-table th, 
+
+    .detail-table th,
     .detail-table td {
         padding: 12px 15px;
         text-align: left;
         border-bottom: 1px solid #e0cfc2;
     }
-    
+
     .detail-table th {
         width: 200px;
         color: #586132;
         font-weight: bold;
         background-color: #f8f5f0;
     }
-    
-    .detail-table tr:last-child th,
-    .detail-table tr:last-child td {
-        border-bottom: none;
-    }
-    
+
     .status-badge {
         display: inline-block;
         padding: 5px 10px;
@@ -148,110 +222,74 @@
         font-size: 12px;
         font-weight: bold;
     }
-    
-    .status-baik {
-        background-color: #d1e7dd;
-        color: #0f5132;
-        border: 1px solid #0f5132;
-    }
-    
-    .status-perlu-perawatan {
-        background-color: #fff3cd;
-        color: #856404;
-        border: 1px solid #856404;
-    }
-    
-    .status-rusak {
-        background-color: #f8d7da;
-        color: #842029;
-        border: 1px solid #842029;
-    }
-    
-    .status-details {
-        margin-top: 8px;
-        font-size: 14px;
-        color: #666;
-    }
-    
+
     .table-container {
         overflow-x: auto;
         border: 1px solid #e0cfc2;
         border-radius: 6px;
     }
-    
+
     .animal-table {
         width: 100%;
         border-collapse: collapse;
     }
-    
+
     .animal-table th,
     .animal-table td {
         padding: 12px 15px;
         text-align: left;
         border-bottom: 1px solid #e0cfc2;
     }
-    
+
     .animal-table th {
         background-color: #586132;
         color: white;
         font-weight: bold;
     }
-    
-    .animal-table tr:last-child td {
-        border-bottom: none;
-    }
-    
+
     .animal-table tr:hover {
         background-color: #f8f5f0;
     }
-    
-    .health-badge {
-        display: inline-block;
-        padding: 5px 10px;
-        border-radius: 20px;
-        font-size: 12px;
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 15px;
+    }
+
+    .stats-card {
+        background-color: #f8f5f0;
+        padding: 15px;
+        border-radius: 6px;
+        text-align: center;
+        border: 1px solid #e0cfc2;
+    }
+
+    .stats-value {
+        font-size: 24px;
         font-weight: bold;
+        color: #586132;
+        margin-bottom: 5px;
     }
-    
-    .health-sehat {
-        background-color: #d1e7dd;
-        color: #0f5132;
-        border: 1px solid #0f5132;
+
+    .stats-label {
+        font-size: 14px;
+        color: #666;
     }
-    
-    .health-sakit {
-        background-color: #f8d7da;
-        color: #842029;
-        border: 1px solid #842029;
-    }
-    
-    .health-pemulihan {
-        background-color: #fff3cd;
-        color: #856404;
-        border: 1px solid #856404;
-    }
-    
-    .action-cell {
-        white-space: nowrap;
-    }
-    
+
+    /* BUTTONS */
     .action-button {
         display: inline-block;
-        padding: 6px 10px;
-        margin-right: 5px;
+        padding: 6px 14px;
+        margin-right: 8px;
         border-radius: 4px;
         text-decoration: none;
-        font-size: 13px;
+        font-size: 14px;
+        font-weight: 600;
         color: white;
         transition: background-color 0.3s;
-    }
-    
-    .detail-button {
-        background-color: #586132;
-    }
-    
-    .detail-button:hover {
-        background-color: #6a7339;
+        cursor: pointer;
+        user-select: none;
     }
     
     .edit-button {
@@ -279,75 +317,51 @@
     }
     
     .add-button {
-        display: inline-block;
         background-color: #586132;
+        padding: 6px 14px;
         color: white;
-        padding: 6px 10px;
-        text-decoration: none;
         border-radius: 4px;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 600;
         transition: background-color 0.3s;
-        font-size: 13px;
+        cursor: pointer;
+        user-select: none;
     }
     
     .add-button:hover {
         background-color: #6a7339;
     }
-    
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 15px;
-    }
-    
-    .stats-card {
-        background-color: #f8f5f0;
-        padding: 15px;
-        border-radius: 6px;
-        text-align: center;
-        border: 1px solid #e0cfc2;
-    }
-    
-    .stats-value {
-        font-size: 24px;
-        font-weight: bold;
-        color: #586132;
-        margin-bottom: 5px;
-    }
-    
-    .stats-label {
-        font-size: 14px;
-        color: #666;
-    }
-    
+
     /* Responsif untuk layar kecil */
     @media (max-width: 768px) {
         .habitat-detail-container {
             margin: 20px 10px;
             padding: 15px;
         }
-        
+
         .page-header {
             flex-direction: column;
             align-items: flex-start;
         }
-        
+
         .header-actions {
             margin-top: 10px;
         }
-        
+
         .detail-table th {
             width: 140px;
         }
-        
+
         .stats-grid {
             grid-template-columns: repeat(2, 1fr);
         }
-        
+
         .action-button {
             margin-bottom: 5px;
         }
     }
-    
+
     @media (max-width: 480px) {
         .stats-grid {
             grid-template-columns: 1fr;
@@ -355,3 +369,4 @@
     }
 </style>
 {% endblock %}
+

@@ -15,6 +15,30 @@ from supabase_utils import (
     get_hewan_by_id
 )
 
+def check_habitat_capacity(nama_habitat: str) -> tuple[bool, str]:
+    """
+    Cek apakah habitat masih punya kapasitas untuk menampung hewan baru.
+    Mengembalikan tuple: (boleh_ditambah, pesan)
+    """
+    try:
+        from habitats.views import get_habitat_by_nama, count_animals_in_habitat
+        
+        habitat = get_habitat_by_nama(nama_habitat)
+        if not habitat:
+            return False, "Habitat tidak ditemukan"
+
+        current_count = count_animals_in_habitat(nama_habitat)
+        max_capacity = habitat.get('kapasitas', 0)
+
+        if current_count >= max_capacity:
+            return False, f"Habitat '{nama_habitat}' sudah penuh ({current_count}/{max_capacity})."
+        
+        return True, f"Tersisa {max_capacity - current_count} slot dari {max_capacity} kapasitas"
+    
+    except Exception as e:
+        return False, f"Gagal mengecek kapasitas habitat: {str(e)}"
+
+
 # Animal related function
 def create_animal(data: Dict[str, Any]) -> Dict[str, Any]:
     """Create a new animal record"""
@@ -74,26 +98,37 @@ class AnimalCreateView(View):
     def post(self, request):
         form = AnimalForm(request.POST)
         if form.is_valid():
+            nama_habitat = form.cleaned_data['habitat']
+
+            # Cek kapasitas habitat sebelum menyimpan data
+            has_capacity, message = check_habitat_capacity(nama_habitat)
+            if not has_capacity:
+                messages.error(request, message)
+                context = {
+                    'form': form,
+                    'title': 'FORM TAMBAH DATA SATWA',
+                    'is_add': True
+                }
+                return render(request, self.template_name, context)
+
             try:
-                # Prepare data for Supabase
                 animal_data = {
                     'nama': form.cleaned_data['name'],
                     'spesies': form.cleaned_data['species'],
                     'asal_hewan': form.cleaned_data['origin'],
                     'tanggal_lahir': form.cleaned_data['birth_date'].isoformat() if form.cleaned_data['birth_date'] else None,
                     'status_kesehatan': form.cleaned_data['health_status'],
-                    'nama_habitat': form.cleaned_data['habitat'],
+                    'nama_habitat': nama_habitat,
                     'url_foto': form.cleaned_data['photo_url']
                 }
-                
-                # Create animal in Supabase
+
                 create_animal(animal_data)
-                messages.success(request, 'Data satwa berhasil ditambahkan!')
+                messages.success(request, f'Satwa berhasil ditambahkan ke habitat "{nama_habitat}"!')
                 return HttpResponseRedirect(reverse_lazy('animals:animal_list'))
-                
+
             except Exception as e:
                 messages.error(request, f'Error menambahkan data satwa: {str(e)}')
-        
+
         context = {
             'form': form,
             'title': 'FORM TAMBAH DATA SATWA',

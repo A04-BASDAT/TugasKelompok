@@ -14,25 +14,25 @@
                     <th>Nama Habitat</th>
                     <th>Luas Area</th>
                     <th>Kapasitas Maksimal</th>
-                    <th>Status Lingkungan</th>
+                    <th>Status</th>
                     <th>Aksi</th>
                 </tr>
             </thead>
             <tbody>
                 {% for habitat in habitats %}
                 <tr>
-                    <td>{{ habitat.name }}</td>
-                    <td>{{ habitat.area }} m²</td>
-                    <td>{{ habitat.max_capacity }} hewan</td>
+                    <td>{{ habitat.nama }}</td>
+                    <td>{{ habitat.luas_area }} m²</td>
+                    <td>{{ habitat.kapasitas }} hewan</td>
                     <td>
-                        <span class="status-badge status-{{ habitat.environment_status|slugify }}">
-                            {{ habitat.environment_status }}
+                        <span class="status-badge status-{{ habitat.status|slugify }}">
+                            {{ habitat.status }}
                         </span>
                     </td>
                     <td class="action-cell">
-                        <a href="{% url 'habitats:habitat_detail' habitat.id %}" class="action-button detail-button">Detail</a>
-                        <a href="{% url 'habitats:habitat_edit' habitat.id %}" class="action-button edit-button">Edit</a>
-                        <a href="{% url 'habitats:habitat_delete' habitat.id %}" class="action-button delete-button">Hapus</a>
+                        <a href="{% url 'habitats:habitat_detail' habitat.nama %}" class="action-button detail-button">Detail</a>
+                        <a href="{% url 'habitats:habitat_edit' habitat.nama %}" class="action-button edit-button">Edit</a>
+                        <a href="{% url 'habitats:habitat_delete' habitat.nama %}" class="action-button delete-button">Hapus</a>
                     </td>
                 </tr>
                 {% empty %}
