@@ -135,7 +135,6 @@ def delete_record(request, record_id):
 # PENJADWALAN PEMERIKSAAN KESEHATAN
 # ==============================
 
-
 def health_check_schedule(request):
     if request.method == 'POST':
         form = HealthCheckScheduleForm(request.POST)
@@ -148,6 +147,7 @@ def health_check_schedule(request):
                 'id_hewan': id_hewan,
                 'tanggal_pemeriksaan_selanjutnya': tanggal_pemeriksaan,
                 'freq_pemeriksaan_rutin': 3,
+                'is_auto_generated': False
             }
             if username_dh:
                 data['username_dh'] = username_dh
@@ -155,8 +155,15 @@ def health_check_schedule(request):
             data = serialize_dates(data)
             try:
                 create_jadwal_pemeriksaan(data)
-                messages.success(request, 'Jadwal pemeriksaan berhasil ditambahkan!')
+
+                # Ambil nama hewan
+                hewan = get_hewan_by_id(data['id_hewan'])
+                nama_hewan = hewan['nama'] if hewan and 'nama' in hewan else 'Hewan'
+
+                # Tampilkan pesan sukses
+                messages.success(request, f'SUKSES: Jadwal pemeriksaan rutin hewan "{nama_hewan}" telah ditambahkan sesuai frekuensi.')
                 return redirect('medical:health_check_schedule')
+
             except Exception as e:
                 messages.error(request, f'Error: {str(e)}')
     else:
@@ -166,7 +173,7 @@ def health_check_schedule(request):
         'form': form,  
         'animals': get_all_hewan(),
         'doctors': get_all_dokter_hewan(),
-        'schedules': get_all_jadwal_pemeriksaan(),  # Supaya jadwal muncul juga
+        'schedules': get_all_jadwal_pemeriksaan(),
     }
     return render(request, 'medical_records/health_check_schedule.html', context)
 

@@ -44,7 +44,7 @@ def add_feeding(request):
             data["penjaga"] = request.user.username  # Tambahkan penjaga dari session user
             create_pakan(data)
             messages.success(request, "Jadwal pakan berhasil ditambahkan.")
-            return redirect('feeding_list')
+            return redirect('feeding:feeding_list')
     else:
         form = FeedingForm()
     return render(request, 'feeding/add_feeding.html', {'form': form})
@@ -55,20 +55,20 @@ def edit_feeding(request, feeding_id):
     existing = get_pakan_by_id(feeding_id)
     if not existing:
         messages.error(request, "Jadwal tidak ditemukan.")
-        return redirect('feeding_list')
+        return redirect('feeding:feeding_list')
 
     print(request.user.username)
     feeding = existing[0]
     if feeding.get("penjaga") != request.user.username:
         messages.error(request, "Anda tidak memiliki akses.")
-        return redirect('feeding_list')
+        return redirect('feeding:feeding_list')
 
     if request.method == 'POST':
         form = FeedingForm(request.POST)
         if form.is_valid():
             update_pakan(feeding_id, form.cleaned_data)
             messages.success(request, "Jadwal pakan berhasil diperbarui.")
-            return redirect('feeding_list')
+            return redirect('feeding:feeding_list')
     else:
         form = FeedingForm(initial=feeding)
     return render(request, 'feeding/edit_feeding.html', {'form': form})
@@ -79,18 +79,18 @@ def delete_feeding(request, feeding_id):
     existing = get_pakan_by_id(feeding_id)
     if not existing:
         messages.error(request, "Jadwal tidak ditemukan.")
-        return redirect('feeding_list')
+        return redirect('feeding:feeding_list')
 
     print(request.user.username)
     feeding = existing[0]
     if feeding.get("penjaga") != request.user.username:
         messages.error(request, "Anda tidak memiliki akses.")
-        return redirect('feeding_list')
+        return redirect('feeding:feeding_list')
 
     if request.method == 'POST':
         delete_pakan(feeding_id)
         messages.success(request, "Jadwal pakan berhasil dihapus.")
-        return redirect('feeding_list')
+        return redirect('feeding:feeding_list')
 
     return render(request, 'feeding/delete_feeding.html', {'feeding': feeding})
 
@@ -100,13 +100,13 @@ def mark_as_done(request, feeding_id):
     existing = get_pakan_by_id(feeding_id)
     if not existing:
         messages.error(request, "Jadwal tidak ditemukan.")
-        return redirect('feeding_list')
+        return redirect('feeding:feeding_list')
 
     feeding = existing[0]
     if feeding.get("penjaga") != request.user.username:
         messages.error(request, "Anda tidak memiliki akses.")
-        return redirect('feeding_list')
+        return redirect('feeding:feeding_list')
 
     mark_done_pakan(feeding_id)
     messages.success(request, "Jadwal pakan ditandai selesai.")
-    return redirect('feeding_list')
+    return redirect('feeding:feeding_list')

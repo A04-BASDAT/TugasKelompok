@@ -4,7 +4,7 @@
 <div class="feeding-container">
     <div class="page-header">
         <h1>Pemberian Pakan</h1>
-        <a href="{% url 'add_feeding' %}" class="add-button">+ Tambah Jadwal Pemberian Pakan</a>
+        <a href="{% url 'feeding:add_feeding' %}" class="add-button">+ Tambah Jadwal Pemberian Pakan</a>
     </div>
 
     <div class="table-container">
@@ -38,10 +38,10 @@
                     <td class="action-cell">
                         {% if feed.id_hewan %}
                             {% if feed.status == "Terjadwal" %}
-                            <a href="{% url 'mark_as_done' feed.id_hewan %}" class="action-button feed-button">Beri Pakan</a>
+                            <a href="{% url 'feeding:mark_as_done' feed.id_hewan %}" class="action-button feed-button">Beri Pakan</a>
                             {% endif %}
-                            <a href="{% url 'edit_feeding' feed.id_hewan %}" class="action-button edit-button">Edit</a>
-                            <a href="{% url 'delete_feeding' feed.id_hewan %}" class="action-button delete-button">Hapus</a>
+                            <a href="{% url 'feeding:edit_feeding' feed.id_hewan %}" class="action-button edit-button">Edit</a>
+                            <a href="{% url 'feeding:delete_feeding' feed.id_hewan %}" class="action-button delete-button">Hapus</a>
                         {% endif %}
                     </td>
                 </tr>
