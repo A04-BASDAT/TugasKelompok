@@ -1,6 +1,8 @@
 from django.urls import path
 from . import views
 
+app_name = 'feeding'
+
 urlpatterns = [
     path('', views.feeding_list, name='feeding_list'),  # Tampilkan daftar pemberian pakan
     path('add/', views.add_feeding, name='add_feeding'),  # Tambah jadwal

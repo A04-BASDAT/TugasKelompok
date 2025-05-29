@@ -11,33 +11,64 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load environment variables
+load_dotenv()
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-0l^)@ts7aq-e^y7m=30k&3^s-p+-&aq(4ba1tf9vqg%1s!+k=$'
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-0l^)@ts7aq-e^y7m=30k&3^s-p+-&aq(4ba1tf9vqg%1s!+k=$')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = ['127.0.0.1', '.vercel.app']
+ALLOWED_HOSTS = [
+    '127.0.0.1',
+    '.vercel.app',
+    'localhost',
+    'tugaskelompok-production.up.railway.app',
+    '.railway.app'
+]
+
+# Security settings
+SECURE_SSL_REDIRECT = os.environ.get('DJANGO_SECURE_SSL_REDIRECT', 'False') == 'True'
+SESSION_COOKIE_SECURE = os.environ.get('DJANGO_SESSION_COOKIE_SECURE', 'False') == 'True'
+CSRF_COOKIE_SECURE = os.environ.get('DJANGO_CSRF_COOKIE_SECURE', 'False') == 'True'
+
+# CSRF and CORS Settings
+CSRF_TRUSTED_ORIGINS = [
+    'https://tugaskelompok-production.up.railway.app',
+    'https://*.railway.app'
+]
+
+CORS_ALLOWED_ORIGINS = [
+    'https://tugaskelompok-production.up.railway.app',
+]
+
+CORS_ALLOW_CREDENTIALS = True
+CSRF_COOKIE_HTTPONLY = False  # False agar JavaScript bisa mengakses cookie CSRF
+CSRF_USE_SESSIONS = True  # Menggunakan session untuk CSRF
+CSRF_COOKIE_SAMESITE = 'Lax'  # Nilai 'Lax' lebih aman untuk production
 
 
-# Application definitio
+# Application definition
 
 INSTALLED_APPS = [
-    'whitenoise.runserver_nostatic',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders',
     'main',
     'animals',
     'habitats',
@@ -54,6 +85,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -71,6 +103,7 @@ TEMPLATES = [
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
@@ -89,8 +122,12 @@ WSGI_APPLICATION = 'tugas_kelompok_basdat.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': os.environ.get("DB_NAME"),
+        'USER': os.environ.get("DB_USER"),
+        'PASSWORD': os.environ.get("DB_PASSWORD"),
+        'HOST': os.environ.get("DB_HOST"),
+        'PORT': os.environ.get("DB_PORT"),
     }
 }
 
@@ -129,19 +166,24 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-import os
-
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 
+
+# Login URL for @login_required decorator
+LOGIN_URL = 'main:login'
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

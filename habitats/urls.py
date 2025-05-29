@@ -1,12 +1,12 @@
 from django.urls import path
-from .views import HabitatListView, HabitatDetailView, HabitatCreateView, HabitatUpdateView, HabitatDeleteView
+from . import views
 
 app_name = 'habitats'
 
 urlpatterns = [
-    path('', HabitatListView.as_view(), name='habitat_list'),
-    path('<int:pk>/', HabitatDetailView.as_view(), name='habitat_detail'),
-    path('add/', HabitatCreateView.as_view(), name='habitat_add'),
-    path('<int:pk>/edit/', HabitatUpdateView.as_view(), name='habitat_edit'),
-    path('<int:pk>/delete/', HabitatDeleteView.as_view(), name='habitat_delete'),
+    path('', views.habitat_list, name='habitat_list'),
+    path('add/', views.habitat_add, name='habitat_add'),
+    path('<str:nama_habitat>/', views.habitat_detail, name='habitat_detail'),
+    path('<str:nama_habitat>/edit/', views.habitat_edit, name='habitat_edit'),
+    path('<str:nama_habitat>/delete/', views.habitat_delete, name='habitat_delete'),
 ]

@@ -6,3 +6,5 @@ requests
 urllib3
 supabase
 python-dotenv
+django-cors-headers
+python-dateutil

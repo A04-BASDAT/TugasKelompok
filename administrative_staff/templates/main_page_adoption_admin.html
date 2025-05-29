@@ -122,6 +122,7 @@
         <div class="flex flex-col">
             <h3 class="text-lg font-medium text-[#586132] mb-4 text-center">FORM ADOPSI SATWA</h3>
             <input type="hidden" id="individualAnimalId" name="animal_id">
+            <input type="hidden" id="individualUsername" name="username">
 
             <div class="mb-4">
                 <p class="text-gray-700">
@@ -130,20 +131,12 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
                     <div>
                         <label class="block text-gray-700 text-sm font-bold mb-2">Nama:</label>
-                        <input type="text" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        <input type="text" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Nama:">
                     </div>
                     <div>
                         <label class="block text-gray-700 text-sm font-bold mb-2">NIK:</label>
-                        <input type="text" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        <input type="text" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="NIK:" maxlength="13">
                     </div>
-                </div>
-                <div class="mt-2">
-                    <label class="block text-gray-700 text-sm font-bold mb-2">Alamat:</label>
-                    <input type="text" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                </div>
-                <div class="mt-2">
-                    <label class="block text-gray-700 text-sm font-bold mb-2">Nomor telepon:</label>
-                    <input type="text" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                 </div>
                 <p class="text-gray-700 mt-4">
                     (selanjutnya disebut sebagai Adopter)
@@ -154,11 +147,11 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
                     <div>
                         <label class="block text-gray-700 text-sm font-bold mb-2">Nama hewan:</label>
-                        <input type="text" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        <input type="text" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Nama hewan:">
                     </div>
                     <div>
                         <label class="block text-gray-700 text-sm font-bold mb-2">Jenis hewan:</label>
-                        <input type="text" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        <input type="text" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Jenis hewan:">
                     </div>
                 </div>
                 <p class="text-gray-700 mt-4">
@@ -166,7 +159,7 @@
                 </p>
                 <div class="mt-2">
                     <label class="block text-gray-700 text-sm font-bold mb-2">Nominal:</label>
-                    <input type="text" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    <input type="text" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Nominal:">
                 </div>
                 <div class="mt-2">
                     <label class="block text-gray-700 text-sm font-bold mb-2">untuk periode adopsi selama:</label>
@@ -196,6 +189,7 @@
         <div class="flex flex-col">
             <h3 class="text-lg font-medium text-[#586132] mb-4 text-center">FORM ADOPSI SATWA</h3>
             <input type="hidden" id="organizationAnimalId" name="animal_id">
+            <input type="hidden" id="organizationUsername" name="username">
 
             <div class="mb-4">
                 <p class="text-gray-700">
@@ -203,21 +197,9 @@
                 </p>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
                     <div>
-                        <label class="block text-gray-700 text-sm font-bold mb-2">Nama:</label>
-                        <input type="text" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">Nama Organisasi:</label>
+                        <input type="text" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Nama:">
                     </div>
-                    <div>
-                        <label class="block text-gray-700 text-sm font-bold mb-2">NPP:</label>
-                        <input type="text" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                    </div>
-                </div>
-                <div class="mt-2">
-                    <label class="block text-gray-700 text-sm font-bold mb-2">Alamat:</label>
-                    <input type="text" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                </div>
-                <div class="mt-2">
-                    <label class="block text-gray-700 text-sm font-bold mb-2">Kontak:</label>
-                    <input type="text" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                 </div>
                 <p class="text-gray-700 mt-4">
                     (selanjutnya disebut sebagai Adopter)
@@ -228,11 +210,11 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
                     <div>
                         <label class="block text-gray-700 text-sm font-bold mb-2">Nama hewan:</label>
-                        <input type="text" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        <input type="text" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Nama hewan:">
                     </div>
                     <div>
                         <label class="block text-gray-700 text-sm font-bold mb-2">Jenis hewan:</label>
-                        <input type="text" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        <input type="text" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Jenis hewan:">
                     </div>
                 </div>
                 <p class="text-gray-700 mt-4">
@@ -240,7 +222,7 @@
                 </p>
                 <div class="mt-2">
                     <label class="block text-gray-700 text-sm font-bold mb-2">Nominal:</label>
-                    <input type="text" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    <input type="text" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Nominal:">
                 </div>
                 <div class="mt-2">
                     <label class="block text-gray-700 text-sm font-bold mb-2">untuk periode adopsi selama:</label>
@@ -346,6 +328,9 @@
 {% endblock %}
 
 {% block script %}
+<!-- Toast Container -->
+<div id="toastContainer" class="fixed bottom-4 right-4 z-50"></div>
+
 <!-- Hidden data for JavaScript -->
 <script id="adoption-data" type="application/json">
     {{ adoption_info_json|safe }}
@@ -354,9 +339,76 @@
     {{ animals_json|safe }}
 </script>
 <script>
+    function showToast(message, type = 'success') {
+        const toastContainer = document.getElementById('toastContainer');
+        
+        const toast = document.createElement('div');
+        toast.className = `mb-4 p-4 rounded-lg shadow-lg transform transition-all duration-300 ease-in-out ${
+            type === 'success' ? 'bg-green-500' : 'bg-red-500'
+        } text-white max-w-sm`;
+        
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(100%)';
+        
+        toast.innerHTML = `
+            <div class="flex items-center justify-between">
+                <span class="text-sm">${message}</span>
+                <button onclick="this.parentElement.parentElement.remove()" class="ml-3 text-white hover:text-gray-200 font-bold">
+                    ✕
+                </button>
+            </div>
+        `;
+        
+        toastContainer.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.style.opacity = '1';
+            toast.style.transform = 'translateX(0)';
+        }, 50);
+        
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(100%)';
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toastContainer.removeChild(toast);
+                }
+            }, 300);
+        }, 5000);
+    }
+
+    function showMultipleToasts(messages, type = 'success', delay = 1000) {
+        messages.forEach((message, index) => {
+            setTimeout(() => {
+                showToast(message, type);
+            }, index * delay);
+        });
+    }
+
+    // Initialize trigger on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize the trigger function
+        fetch('/administrative-staff/initialize-trigger/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log('Trigger initialized successfully:', data.message);
+            } else {
+                console.warn('Trigger initialization failed:', data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error initializing trigger:', error);
+        });
+    });
+
     // Adopter Form Modal
     function openAdopterForm(animalId) {
-        // Store the animal ID for later use
         document.getElementById('animalIdInput').value = animalId;
         document.getElementById('adopterFormModal').classList.remove('hidden');
     }
@@ -365,52 +417,64 @@
         document.getElementById('adopterFormModal').classList.add('hidden');
     }
 
-    function verifyAccount() {
-        // For this implementation, we'll skip the actual verification
-        // and just proceed to the appropriate form based on the selected type
-
-        // Check which radio button is selected
+    async function verifyAccount() {
         const individualRadio = document.querySelector('input[name="adopter_type"][value="individu"]');
-        // Get the animal ID from the hidden input
         const animalId = document.getElementById('animalIdInput').value;
-
-        // Get the username
         const username = document.querySelector('input[placeholder="Masukkan username"]').value;
 
         if (!username) {
-            alert("Silakan masukkan username calon adopter terlebih dahulu!");
+            showToast("Silakan masukkan username calon adopter terlebih dahulu!", "error");
             return;
         }
 
-        if (individualRadio.checked) {
-            // Open individual form
-            closeAdopterForm();
-            // Store the animal ID in the individual form
-            document.getElementById('individualAnimalId').value = animalId;
-            document.getElementById('individualAdoptionForm').classList.remove('hidden');
-        } else {
-            // Open organization form
-            closeAdopterForm();
-            // Store the animal ID in the organization form
-            document.getElementById('organizationAnimalId').value = animalId;
-            document.getElementById('organizationAdoptionForm').classList.remove('hidden');
+        if (!individualRadio.checked && !document.querySelector('input[name="adopter_type"][value="organisasi"]').checked) {
+            showToast("Silakan pilih tipe adopter (Individu/Organisasi)!", "error");
+            return;
+        }
+
+        try {
+            const response = await fetch(`/administrative-staff/verify-username/?username=${username}`);
+            const data = await response.json();
+
+            if (!data.exists) {
+                showToast("Username tidak ditemukan dalam sistem!", "error");
+                return;
+            }
+
+            if (individualRadio.checked) {
+                closeAdopterForm();
+                document.getElementById('individualAnimalId').value = animalId;
+                document.getElementById('individualUsername').value = username;
+                document.getElementById('individualAdoptionForm').classList.remove('hidden');
+            } else {
+                closeAdopterForm();
+                document.getElementById('organizationAnimalId').value = animalId;
+                document.getElementById('organizationUsername').value = username;
+                document.getElementById('organizationAdoptionForm').classList.remove('hidden');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showToast("Terjadi kesalahan saat memverifikasi username", "error");
         }
     }
 
-    // Individual Adoption Form
     function closeIndividualForm() {
         document.getElementById('individualAdoptionForm').classList.add('hidden');
     }
 
     function submitIndividualForm() {
-        // Get all form data
         const animalId = document.getElementById('individualAnimalId').value;
         const username = document.getElementById('individualUsername').value;
-        const nama = document.getElementById('individualName').value;
-        const nik = document.getElementById('individualNIK').value;
-        const startDate = document.getElementById('individualStartDate').value;
-        const endDate = document.getElementById('individualEndDate').value;
-        const kontribusi = document.getElementById('individualContribution').value;
+        const nama = document.querySelector('#individualAdoptionForm input[placeholder="Nama:"]').value;
+        const nik = document.querySelector('#individualAdoptionForm input[placeholder="NIK:"]').value;
+        const namaHewan = document.querySelector('#individualAdoptionForm input[placeholder="Nama hewan:"]').value;
+        const jenisHewan = document.querySelector('#individualAdoptionForm input[placeholder="Jenis hewan:"]').value;
+        const kontribusi = document.querySelector('#individualAdoptionForm input[placeholder="Nominal:"]').value;
+        const periode = document.querySelector('#individualAdoptionForm select').value;
+
+        const startDate = new Date();
+        const endDate = new Date();
+        endDate.setMonth(endDate.getMonth() + parseInt(periode));
 
         const data = {
             adopter_type: 'individu',
@@ -418,12 +482,11 @@
             animal_id: animalId,
             nama: nama,
             nik: nik,
-            start_date: startDate,
-            end_date: endDate,
-            kontribusi: kontribusi
+            start_date: startDate.toISOString().split('T')[0],
+            end_date: endDate.toISOString().split('T')[0],
+            kontribusi: parseInt(kontribusi)
         };
 
-        // Send data to server
         fetch('/administrative-staff/submit-adoption/', {
             method: 'POST',
             headers: {
@@ -434,46 +497,52 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert(data.message);
+                const messages = [data.message];
+                if (data.trigger_message) {
+                    messages.push(data.trigger_message);
+                }
+                showMultipleToasts(messages, "success");
                 closeIndividualForm();
-                window.location.reload();
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
             } else {
-                alert('Error: ' + data.error);
+                showToast(data.error, "error");
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Terjadi kesalahan saat memproses adopsi');
+            showToast('Terjadi kesalahan saat memproses adopsi', "error");
         });
     }
 
-    // Organization Adoption Form
     function closeOrganizationForm() {
         document.getElementById('organizationAdoptionForm').classList.add('hidden');
     }
 
     function submitOrganizationForm() {
-        // Get all form data
         const animalId = document.getElementById('organizationAnimalId').value;
         const username = document.getElementById('organizationUsername').value;
-        const namaOrganisasi = document.getElementById('organizationName').value;
-        const npp = document.getElementById('organizationNPP').value;
-        const startDate = document.getElementById('organizationStartDate').value;
-        const endDate = document.getElementById('organizationEndDate').value;
-        const kontribusi = document.getElementById('organizationContribution').value;
+        const namaOrganisasi = document.querySelector('#organizationAdoptionForm input[placeholder="Nama:"]').value;
+        const namaHewan = document.querySelector('#organizationAdoptionForm input[placeholder="Nama hewan:"]').value;
+        const jenisHewan = document.querySelector('#organizationAdoptionForm input[placeholder="Jenis hewan:"]').value;
+        const kontribusi = document.querySelector('#organizationAdoptionForm input[placeholder="Nominal:"]').value;
+        const periode = document.querySelector('#organizationAdoptionForm select').value;
+
+        const startDate = new Date();
+        const endDate = new Date();
+        endDate.setMonth(endDate.getMonth() + parseInt(periode));
 
         const data = {
             adopter_type: 'organisasi',
             username: username,
             animal_id: animalId,
             nama_organisasi: namaOrganisasi,
-            npp: npp,
-            start_date: startDate,
-            end_date: endDate,
-            kontribusi: kontribusi
+            start_date: startDate.toISOString().split('T')[0],
+            end_date: endDate.toISOString().split('T')[0],
+            kontribusi: parseInt(kontribusi)
         };
 
-        // Send data to server
         fetch('/administrative-staff/submit-adoption/', {
             method: 'POST',
             headers: {
@@ -484,36 +553,37 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert(data.message);
+                const messages = [data.message];
+                if (data.trigger_message) {
+                    messages.push(data.trigger_message);
+                }
+                showMultipleToasts(messages, "success");
                 closeOrganizationForm();
-                window.location.reload();
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
             } else {
-                alert('Error: ' + data.error);
+                showToast(data.error, "error");
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Terjadi kesalahan saat memproses adopsi');
+            showToast('Terjadi kesalahan saat memproses adopsi', "error");
         });
     }
 
-    // Adoption Detail Modal
     function openDetailModal(animalId) {
         console.log("Opening details for animal ID:", animalId);
 
-        // Store the animal ID for later use (e.g., when terminating the adoption)
         document.getElementById('adoptionDetailModal').dataset.animalId = animalId;
 
-        // Get the adoption data from the page
         const adoptionData = JSON.parse(document.getElementById('adoption-data').textContent);
         const animalData = JSON.parse(document.getElementById('animal-data').textContent);
 
-        // Find the animal and adoption info
         const animal = animalData.find(a => a.id === animalId);
         const adoptionInfo = adoptionData[animalId];
 
         if (animal && adoptionInfo) {
-            // Update the modal with the animal and adoption details
             document.getElementById('detailAnimalName').textContent = animal.nama;
             document.getElementById('detailAnimalSpecies').textContent = animal.spesies;
             document.getElementById('detailAdopterName').textContent = adoptionInfo.adopter;
@@ -521,12 +591,10 @@
             document.getElementById('detailEndDate').textContent = adoptionInfo.adoption.end_date;
             document.getElementById('detailContribution').textContent = adoptionInfo.adoption.contribution;
 
-            // Set the payment status dropdown
             const paymentStatusSelect = document.getElementById('paymentStatusSelect');
             paymentStatusSelect.value = adoptionInfo.adoption.payment_status;
         }
 
-        // Show the modal
         document.getElementById('adoptionDetailModal').classList.remove('hidden');
     }
 
@@ -541,16 +609,27 @@
         const adoptionInfo = adoptionData[animalId];
 
         if (!adoptionInfo || !adoptionInfo.adoption) {
-            alert('Data adopsi tidak ditemukan');
+            showToast('Data adopsi tidak ditemukan', "error");
             return;
         }
 
+        // Extract id_adopter from the adopter string
+        // Format: "Adopter ID: {id_adopter}"
+        const adopter_match = adoptionInfo.adopter.match(/Adopter ID: (.+)/);
+        if (!adopter_match) {
+            showToast('ID Adopter tidak ditemukan', "error");
+            return;
+        }
+        const id_adopter = adopter_match[1];
+
         const data = {
-            adoption_id: adoptionInfo.adoption.id,
+            id_adopter: id_adopter,
+            id_hewan: animalId,
             status: paymentStatus
         };
 
-        // Send update to server
+        console.log('[DEBUG] savePaymentStatus data:', data);
+
         fetch('/administrative-staff/update-payment-status/', {
             method: 'POST',
             headers: {
@@ -561,15 +640,15 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert(data.message);
+                showToast(data.message, "success");
                 window.location.reload();
             } else {
-                alert('Error: ' + data.error);
+                showToast(data.error, "error");
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Terjadi kesalahan saat memperbarui status pembayaran');
+            showToast('Terjadi kesalahan saat memperbarui status pembayaran', "error");
         });
     }
 
@@ -588,27 +667,21 @@
         const animalId = document.getElementById('terminateAdoptionModal').dataset.animalId;
         console.log("Terminating adoption for animal ID:", animalId);
 
-        // Get the adoption data
         const adoptionData = JSON.parse(document.getElementById('adoption-data').textContent);
 
-        // Update the adoption status in the adoption data
         if (adoptionData[animalId]) {
             adoptionData[animalId].status = 'Tidak Diadopsi';
             adoptionData[animalId].adopter = null;
             adoptionData[animalId].adoption = null;
 
-            // In a real application, you would send this data to the server
-            // For now, we'll just update the local data and show a success message
             document.getElementById('adoption-data').textContent = JSON.stringify(adoptionData);
         }
 
         closeTerminateModal();
         closeDetailModal();
 
-        // Show success message
-        alert("Adopsi berhasil dihentikan!");
+        showToast("Adopsi berhasil dihentikan!", "success");
 
-        // Reload the page to see the updated status
         window.location.reload();
     }
 </script>

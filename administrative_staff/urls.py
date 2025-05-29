@@ -10,4 +10,7 @@ urlpatterns = [
     path('submit-adoption/', views.submit_adoption, name='submit_adoption'),
     path('update-payment-status/', views.update_payment_status, name='update_payment_status'),
     path('delete-adopter/<str:adopter_id>/', views.delete_adopter_view, name='delete_adopter'),
+    path('verify-username/', views.verify_username, name='verify_username'),
+    path('get-top-adopters-realtime/', views.get_top_adopters_realtime, name='get_top_adopters_realtime'),
+    path('initialize-trigger/', views.initialize_trigger, name='initialize_trigger'),
 ]

@@ -11,17 +11,85 @@
         <div class="mb-8">
             <h2 class="text-xl font-semibold text-gray-800 mb-4">Halaman Daftar Adopter </h2>
             
-            <!-- Top Adopters Section -->
+            <!-- Top Adopters Section dengan Loading State -->
             <div class="border border-gray-300 rounded-lg p-6 mb-6">
-                <h3 class="text-lg font-semibold text-gray-800 mb-4">Adopter dengan Total Kontribusi Tertinggi dalam Setahun Terakhir</h3>
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800">Top 5 Total Kontribusi Tertinggi Yang sudah lunas (Keseluruhan)</h3>
+                    <button id="refreshTopAdopters" onclick="loadTopAdoptersRealtime()" 
+                            class="bg-[#586132] hover:bg-[#6B7542] text-white font-bold py-2 px-4 rounded text-sm">
+                        🔄 Refresh Data Real-time
+                    </button>
+                </div>
                 
-                <ol class="list-decimal list-inside space-y-2 pl-4">
-                    {% for adopter in top_adopters %}
-                        <li class="text-gray-700">{{ adopter.name }} - Rp{{ adopter.yearly_kontribusi|floatformat:0 }}</li>
-                    {% empty %}
-                        <li class="text-gray-500">Tidak ada data adopter</li>
-                    {% endfor %}
-                </ol>
+                <!-- Loading State -->
+                <div id="topAdoptersLoading" class="hidden">
+                    <div class="flex items-center justify-center py-8">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#586132]"></div>
+                        <span class="ml-3 text-gray-600">Mengambil data real-time dari database...</span>
+                    </div>
+                </div>
+                
+                <!-- Top Adopters List -->
+                <div id="topAdoptersList">
+                    <ol class="list-decimal list-inside space-y-3 pl-4">
+                        {% for adopter in top_adopters %}
+                            <li class="text-gray-700 bg-gray-50 p-3 rounded-lg border">
+                                <div class="flex justify-between items-center">
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <span class="font-semibold text-gray-900">{{ adopter.name }}</span>
+                                            {% if adopter.type == 'Individu' %}
+                                                <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">{{ adopter.type }}</span>
+                                            {% else %}
+                                                <span class="px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-800">{{ adopter.type }}</span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="text-sm text-gray-600">
+                                            Username: {{ adopter.username }}
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="font-bold text-[#586132] text-lg">
+                                            Rp{{ adopter.total_kontribusi|floatformat:0 }}
+                                        </div>
+                                        <div class="text-xs text-gray-500">
+                                            Total Kontribusi
+                                        </div>
+                                        {% if adopter.yearly_kontribusi > 0 %}
+                                            <div class="text-xs text-green-600 mt-1">
+                                                +Rp{{ adopter.yearly_kontribusi|floatformat:0 }} (1 tahun terakhir)
+                                            </div>
+                                        {% else %}
+                                            <div class="text-xs text-gray-400 mt-1">Tidak ada kontribusi tahun ini</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </li>
+                        {% empty %}
+                            <li class="text-gray-500 bg-gray-50 p-3 rounded-lg border">
+                                <div class="text-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-gray-400 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                    </svg>
+                                    <p class="text-gray-600">Belum ada data adopter dengan kontribusi</p>
+                                    <p class="text-xs text-gray-500 mt-1">Data akan muncul setelah ada adopsi yang lunas</p>
+                                </div>
+                            </li>
+                        {% endfor %}
+                    </ol>
+                </div>
+                
+                <!-- Error State -->
+                <div id="topAdoptersError" class="hidden">
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 text-red-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                            </svg>
+                            <span class="text-red-700" id="topAdoptersErrorMessage">Terjadi kesalahan saat mengambil data</span>
+                        </div>
+                    </div>
+                </div>
             </div>
             
             <!-- Individual Adopters Section -->
@@ -34,6 +102,7 @@
                                 <th class="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Adopter</th>
                                 <th class="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">NIK</th>
                                 <th class="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Kontribusi</th>
+                                <th class="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status Pembayaran</th>
                                 <th class="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Riwayat Adopsi</th>
                                 <th class="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                             </tr>
@@ -45,13 +114,20 @@
                                     <td class="py-2 px-4 border-b border-gray-200">{{ adopter.nik }}</td>
                                     <td class="py-2 px-4 border-b border-gray-200">Rp{{ adopter.total_kontribusi|floatformat:0 }}</td>
                                     <td class="py-2 px-4 border-b border-gray-200">
+                                        {% if adopter.has_pending_payment %}
+                                            <span class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">Ada Pembayaran Tertunda</span>
+                                        {% else %}
+                                            <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Semua Lunas</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="py-2 px-4 border-b border-gray-200">
                                         <a href="{% url 'administrative_staff:adopter_detail' adopter.id %}" 
                                            class="bg-[#586132] hover:bg-[#6B7542] text-white font-bold py-1 px-3 rounded text-sm">
                                             Lihat Detail
                                         </a>
                                     </td>
                                     <td class="py-2 px-4 border-b border-gray-200">
-                                        <button onclick="deleteAdopter('{{ adopter.id }}')" 
+                                        <button onclick="showDeleteModal('{{ adopter.id }}', '{{ adopter.name }}', 'individu')" 
                                                 class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-sm">
                                             Hapus
                                         </button>
@@ -59,7 +135,7 @@
                                 </tr>
                             {% empty %}
                                 <tr>
-                                    <td colspan="5" class="py-4 px-4 border-b border-gray-200 text-center text-gray-500">Tidak ada data adopter individu</td>
+                                    <td colspan="6" class="py-4 px-4 border-b border-gray-200 text-center text-gray-500">Tidak ada data adopter individu</td>
                                 </tr>
                             {% endfor %}
                         </tbody>
@@ -76,6 +152,7 @@
                                 <th class="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Organisasi</th>
                                 <th class="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">NPP</th>
                                 <th class="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Kontribusi</th>
+                                <th class="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status Pembayaran</th>
                                 <th class="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Riwayat Adopsi</th>
                                 <th class="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                             </tr>
@@ -87,13 +164,20 @@
                                     <td class="py-2 px-4 border-b border-gray-200">{{ adopter.npp }}</td>
                                     <td class="py-2 px-4 border-b border-gray-200">Rp{{ adopter.total_kontribusi|floatformat:0 }}</td>
                                     <td class="py-2 px-4 border-b border-gray-200">
+                                        {% if adopter.has_pending_payment %}
+                                            <span class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">Ada Pembayaran Tertunda</span>
+                                        {% else %}
+                                            <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Semua Lunas</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="py-2 px-4 border-b border-gray-200">
                                         <a href="{% url 'administrative_staff:adopter_detail' adopter.id %}" 
                                            class="bg-[#586132] hover:bg-[#6B7542] text-white font-bold py-1 px-3 rounded text-sm">
                                             Lihat Detail
                                         </a>
                                     </td>
                                     <td class="py-2 px-4 border-b border-gray-200">
-                                        <button onclick="deleteAdopter('{{ adopter.id }}')" 
+                                        <button onclick="showDeleteModal('{{ adopter.id }}', '{{ adopter.name }}', 'organisasi')" 
                                                 class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-sm">
                                             Hapus
                                         </button>
@@ -101,7 +185,7 @@
                                 </tr>
                             {% empty %}
                                 <tr>
-                                    <td colspan="5" class="py-4 px-4 border-b border-gray-200 text-center text-gray-500">Tidak ada data adopter organisasi</td>
+                                    <td colspan="6" class="py-4 px-4 border-b border-gray-200 text-center text-gray-500">Tidak ada data adopter organisasi</td>
                                 </tr>
                             {% endfor %}
                         </tbody>
@@ -112,29 +196,259 @@
     </div>
 </div>
 
+<!-- Modal Konfirmasi Hapus -->
+<div id="deleteConfirmModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-0 border w-full max-w-md shadow-lg rounded-lg bg-white overflow-hidden">
+        <div class="flex flex-col">
+            <div class="bg-red-100 px-5 py-3 flex justify-between items-center">
+                <h3 class="text-lg font-medium text-red-800">Konfirmasi Hapus Adopter</h3>
+                <button onclick="closeDeleteModal()" class="text-red-600 hover:text-red-800 font-medium">
+                    ✕
+                </button>
+            </div>
+
+            <div class="p-5">
+                <div class="flex items-center mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-red-500 mr-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <div>
+                        <h4 class="text-lg font-bold text-gray-800">Apakah Anda yakin?</h4>
+                        <p class="text-gray-600">Tindakan ini tidak dapat dibatalkan</p>
+                    </div>
+                </div>
+
+                <div class="bg-red-50 p-4 rounded-lg mb-4">
+                    <p class="text-sm text-red-800 mb-2">
+                        <strong>Adopter:</strong> <span id="deleteAdopterName"></span>
+                    </p>
+                    <p class="text-sm text-red-800">
+                        <strong>Jenis:</strong> <span id="deleteAdopterType"></span>
+                    </p>
+                </div>
+
+                <p class="text-sm text-gray-600 mb-4">
+                    Menghapus adopter ini akan menghapus semua riwayat adopsi terkait. Data yang sudah dihapus tidak dapat dikembalikan.
+                </p>
+
+                <div class="flex justify-center space-x-3">
+                    <button onclick="closeDeleteModal()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 font-medium">
+                        Batal
+                    </button>
+                    <button id="confirmDeleteBtn" onclick="confirmDeleteAdopter()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium">
+                        Ya, Hapus Adopter
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Notification Container -->
+<div id="toastContainer" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
+
 <script>
-function deleteAdopter(adopterId) {
-    if (confirm('Apakah Anda yakin ingin menghapus adopter ini? Tindakan ini akan menghapus semua riwayat adopsi terkait.')) {
-        fetch(`/administrative-staff/delete-adopter/${adopterId}/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        })
+let currentAdopterId = null;
+
+// Function to show toast notification
+function showToast(message, type = 'success', duration = 5000) {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    
+    const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500';
+    const icon = type === 'success' 
+        ? '<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>'
+        : '<path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>';
+    
+    toast.className = `${bgColor} text-white px-6 py-3 rounded-lg shadow-lg transform transition-all duration-300 max-w-md`;
+    toast.innerHTML = `
+        <div class="flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                ${icon}
+            </svg>
+            <span class="text-sm">${message}</span>
+            <button onclick="this.parentElement.parentElement.remove()" class="ml-3 text-white hover:text-gray-200">
+                ✕
+            </button>
+        </div>
+    `;
+    
+    container.appendChild(toast);
+    
+    // Auto remove after duration
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(100%)';
+            setTimeout(() => toast.remove(), 300);
+        }
+    }, duration);
+}
+
+// Function to load top adopters in real-time
+function loadTopAdoptersRealtime() {
+    const loadingEl = document.getElementById('topAdoptersLoading');
+    const listEl = document.getElementById('topAdoptersList');
+    const errorEl = document.getElementById('topAdoptersError');
+    const refreshBtn = document.getElementById('refreshTopAdopters');
+    
+    // Show loading state
+    loadingEl.classList.remove('hidden');
+    listEl.classList.add('hidden');
+    errorEl.classList.add('hidden');
+    refreshBtn.disabled = true;
+    refreshBtn.innerHTML = '⏳ Memuat...';
+    
+    fetch('/administrative-staff/get-top-adopters-realtime/')
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert(data.message);
-                window.location.reload();
+                // Update the list with real-time data
+                const topAdopters = data.data.top_adopters;
+                let listHTML = '<ol class="list-decimal list-inside space-y-3 pl-4">';
+                
+                if (topAdopters.length > 0) {
+                    topAdopters.forEach((adopter, index) => {
+                        // Create more detailed list item with type and total contribution
+                        const badgeColor = adopter.type === 'Individu' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800';
+                        
+                        listHTML += `
+                            <li class="text-gray-700 bg-gray-50 p-3 rounded-lg border">
+                                <div class="flex justify-between items-center">
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <span class="font-semibold text-gray-900">${adopter.name}</span>
+                                            <span class="px-2 py-1 text-xs rounded-full ${badgeColor}">${adopter.type}</span>
+                                        </div>
+                                        <div class="text-sm text-gray-600">
+                                            Username: ${adopter.username}
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="font-bold text-[#586132] text-lg">
+                                            Rp${adopter.total_kontribusi.toLocaleString('id-ID')}
+                                        </div>
+                                        <div class="text-xs text-gray-500">
+                                            Total Kontribusi
+                                        </div>
+                                        ${adopter.yearly_kontribusi > 0 ? 
+                                            `<div class="text-xs text-green-600 mt-1">
+                                                +Rp${adopter.yearly_kontribusi.toLocaleString('id-ID')} (1 tahun terakhir)
+                                            </div>` : 
+                                            '<div class="text-xs text-gray-400 mt-1">Tidak ada kontribusi tahun ini</div>'
+                                        }
+                                    </div>
+                                </div>
+                            </li>
+                        `;
+                    });
+                } else {
+                    listHTML += '<li class="text-gray-500">Tidak ada data adopter dengan kontribusi</li>';
+                }
+                
+                listHTML += '</ol>';
+                listEl.innerHTML = listHTML;
+                
+                // Show success toast with trigger notification message
+                showToast(data.data.notification_message, 'success', 8000);
+                
+                // Show debug info in console
+                if (data.data.debug_info) {
+                    console.log('🐛 Debug Info:', data.data.debug_info);
+                }
+                
+                // Show the updated list
+                loadingEl.classList.add('hidden');
+                listEl.classList.remove('hidden');
             } else {
-                alert(data.message || 'Terjadi kesalahan saat menghapus adopter');
+                throw new Error(data.error || 'Terjadi kesalahan');
             }
         })
         .catch(error => {
-            console.error('Error:', error);
-            alert('Terjadi kesalahan saat menghapus adopter');
+            console.error('Error loading top adopters:', error);
+            
+            // Show error state
+            loadingEl.classList.add('hidden');
+            errorEl.classList.remove('hidden');
+            document.getElementById('topAdoptersErrorMessage').textContent = error.message || 'Terjadi kesalahan saat mengambil data';
+            
+            // Show error toast
+            showToast('Gagal mengambil data top adopters: ' + (error.message || 'Terjadi kesalahan'), 'error');
+        })
+        .finally(() => {
+            // Reset refresh button
+            refreshBtn.disabled = false;
+            refreshBtn.innerHTML = '🔄 Refresh Data';
         });
-    }
+}
+
+// Auto-load on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Load top adopters automatically when page loads
+    loadTopAdoptersRealtime();
+});
+
+function showDeleteModal(adopterId, adopterName, adopterType) {
+    currentAdopterId = adopterId;
+    document.getElementById('deleteAdopterName').textContent = adopterName;
+    document.getElementById('deleteAdopterType').textContent = adopterType === 'individu' ? 'Adopter Individu' : 'Adopter Organisasi';
+    document.getElementById('deleteConfirmModal').classList.remove('hidden');
+}
+
+function closeDeleteModal() {
+    currentAdopterId = null;
+    document.getElementById('deleteConfirmModal').classList.add('hidden');
+}
+
+function confirmDeleteAdopter() {
+    if (!currentAdopterId) return;
+    
+    // Disable button to prevent double clicks
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = 'Menghapus...';
+    
+    fetch(`/administrative-staff/delete-adopter/${currentAdopterId}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show main success message
+            showToast(data.message, 'success');
+            
+            // Show trigger messages if available
+            if (data.trigger_messages && data.trigger_messages.length > 0) {
+                data.trigger_messages.forEach((message, index) => {
+                    setTimeout(() => {
+                        showToast(message, 'success');
+                    }, (index + 1) * 1000); // Stagger the messages
+                });
+            }
+            
+            closeDeleteModal();
+            
+            // Reload page after showing all messages
+            const totalMessages = 1 + (data.trigger_messages ? data.trigger_messages.length : 0);
+            setTimeout(() => {
+                window.location.reload();
+            }, totalMessages * 1000 + 1000);
+        } else {
+            showToast(data.message || 'Terjadi kesalahan saat menghapus adopter', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Terjadi kesalahan saat menghapus adopter', 'error');
+    })
+    .finally(() => {
+        // Re-enable button
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = 'Ya, Hapus Adopter';
+    });
 }
 </script>
 {% endblock %}

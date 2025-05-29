@@ -366,14 +366,94 @@ def dashboard(request):
             if visitor_result.data:
                 visitor_data = visitor_result.data[0]
                 role_data = visitor_data
-                # Convert tgl_lahir string to date object if exists
+                # Convert tgl_lahir string to date object 
                 if role_data.get('tgl_lahir'):
                     try:
                         from datetime import datetime
                         role_data['tgl_lahir'] = datetime.fromisoformat(role_data['tgl_lahir']).date()
                     except:
                         role_data['tgl_lahir'] = None
+                        
+                # Get visitor's reservations
+                reservasi_result = supabase.table('reservasi').select('''
+                    *,
+                    fasilitas(nama, jadwal, kapasitas_max)
+                ''').eq('username_p', username).order('tanggal_kunjungan', desc=True).execute()
                 
+                completed_visits = []
+                all_tickets = [] 
+                
+                # Counters for statistics
+                total_completed_tickets = 0
+                total_scheduled_tickets = 0
+                total_active_tickets = 0 
+                
+                if reservasi_result.data:
+                    from datetime import datetime, date
+                    
+                    for reservasi in reservasi_result.data:
+                        try:
+                            # Parse tanggal kunjungan
+                            tanggal_kunjungan = datetime.fromisoformat(reservasi['tanggal_kunjungan']).date()
+                            facility_name = reservasi['nama_fasilitas']
+                            status = reservasi['status'].lower()
+                            jumlah_tiket = reservasi['jumlah_tiket']
+                            
+                            # Determine facility type (wahana/atraksi)
+                            facility_type = "Fasilitas"
+                            
+                            # Check if it's a wahana
+                            wahana_check = supabase.table('wahana').select('nama_wahana').eq('nama_wahana', facility_name).execute()
+                            if wahana_check.data:
+                                facility_type = "Wahana"
+                            else:
+                                # Check if it's an atraksi
+                                atraksi_check = supabase.table('atraksi').select('nama_atraksi').eq('nama_atraksi', facility_name).execute()
+                                if atraksi_check.data:
+                                    facility_type = "Atraksi"
+                            
+                            # Count tickets for statistics
+                            if status == 'selesai':
+                                total_completed_tickets += jumlah_tiket
+                                total_active_tickets += jumlah_tiket
+                                
+                                # Add to completed visits
+                                completed_visits.append({
+                                    'tanggal': tanggal_kunjungan,
+                                    'tanggal_formatted': tanggal_kunjungan.strftime('%d %B %Y'),
+                                    'nama_fasilitas': facility_name,
+                                    'jenis_fasilitas': facility_type,
+                                    'jumlah_tiket': jumlah_tiket,
+                                    'status': reservasi['status']
+                                })
+                                
+                            elif status == 'terjadwal':
+                                total_scheduled_tickets += jumlah_tiket
+                                total_active_tickets += jumlah_tiket
+                            
+                            # Add to all tickets
+                            if status in ['terjadwal', 'selesai', 'dibatalkan']:
+                                all_tickets.append({
+                                    'tanggal': tanggal_kunjungan,
+                                    'tanggal_formatted': tanggal_kunjungan.strftime('%d %B %Y'),
+                                    'nama_fasilitas': facility_name,
+                                    'jenis_fasilitas': facility_type,
+                                    'jumlah_tiket': jumlah_tiket,
+                                    'status': reservasi['status']
+                                })
+                            
+                        except Exception as e:
+                            print(f"Error parsing reservation: {str(e)}")
+                            continue
+                
+                role_data['completed_visits'] = completed_visits  
+                role_data['all_tickets'] = all_tickets 
+                
+                # Calculate statistics
+                role_data['total_visits'] = total_completed_tickets
+                role_data['upcoming_visits'] = total_scheduled_tickets
+                role_data['total_tickets'] = total_active_tickets
+                        
         elif role == 'veterinarian':
             # Get veterinarian specific data
             dokter_result = supabase.table('dokter_hewan').select('*').eq('username_dh', username).execute()
@@ -386,12 +466,64 @@ def dashboard(request):
                 role_data['specializations'] = [s['nama_spesialisasi'] for s in spesialisasi_result.data]
             else:
                 role_data['specializations'] = []
+            
+            # Get medical records handled by this vet
+            catatan_result = supabase.table('catatan_medis').select('*').eq('username_dh', username).execute()
+            if catatan_result.data:
+                medical_records = catatan_result.data
+                
+                # Count unique animals (total patients)
+                unique_animals = len(set(record['id_hewan'] for record in medical_records))
+                role_data['total_patients'] = unique_animals
+                
+                # Count active patients (animals with recent records)
+                active_patients = len([r for r in medical_records if r.get('status_kesehatan') in ['Sakit', 'Dalam Perawatan']])
+                role_data['active_patients'] = active_patients
+                
+                # Count recovered patients
+                recovered_patients = len([r for r in medical_records if r.get('status_kesehatan') == 'Sehat'])
+                role_data['recovered_patients'] = recovered_patients
+                
+                # Get latest 5 medical records
+                latest_records = sorted(medical_records, key=lambda x: x.get('tanggal_pemeriksaan', ''), reverse=True)[:5]
+                role_data['latest_records'] = latest_records
+            else:
+                role_data['total_patients'] = 0
+                role_data['active_patients'] = 0
+                role_data['recovered_patients'] = 0
+                role_data['latest_records'] = []
                 
         elif role == 'animal_keeper':
             # Get animal keeper specific data
             keeper_result = supabase.table('penjaga_hewan').select('*').eq('username_jh', username).execute()
             if keeper_result.data:
                 role_data = keeper_result.data[0]
+            
+            # Get feeding records for today
+            memberi_result = supabase.table('memberi').select('*').eq('username_jh', username).execute()
+            if memberi_result.data:
+                feeding_records = memberi_result.data
+                
+                # Count animals fed today
+                today_feeding = []
+                for record in feeding_records:
+                    jadwal_str = record.get('jadwal')
+                    if jadwal_str:
+                        try:
+                            # Parse the timestamp to check if it's today
+                            jadwal_date = datetime.fromisoformat(jadwal_str.replace('Z', '+00:00')).date()
+                            if jadwal_date == today:
+                                today_feeding.append(record)
+                        except:
+                            continue
+                
+                # Count unique animals fed today
+                animals_fed_today = len(set(record['id_hewan'] for record in today_feeding))
+                role_data['animals_fed_today'] = animals_fed_today
+                role_data['feeding_sessions_today'] = len(today_feeding)
+            else:
+                role_data['animals_fed_today'] = 0
+                role_data['feeding_sessions_today'] = 0
                 
         elif role == 'trainer':
             # Get trainer specific data
@@ -399,11 +531,188 @@ def dashboard(request):
             if trainer_result.data:
                 role_data = trainer_result.data[0]
                 
+                # Get current date
+                from datetime import datetime, date
+                today = date.today()
+                
+                try:
+                    # Get scheduled shows for trainer
+                    jadwal_result = supabase.table('jadwal_penugasan').select('''
+                        tgl_penugasan,
+                        nama_atraksi,
+                        atraksi(lokasi)
+                    ''').eq('username_lh', username).execute()
+                    
+                    shows = []
+                    if jadwal_result.data:
+                        for jadwal in jadwal_result.data:
+                            try:
+                                jadwal_datetime = datetime.fromisoformat(jadwal['tgl_penugasan'].replace('Z', '+00:00'))
+                                jadwal_date = jadwal_datetime.date()
+                                jadwal_time = jadwal_datetime.time()
+                                
+                                # Check if it's today's show
+                                if jadwal_date == today:
+                                    current_time = datetime.now().time()
+                                    
+                                    # Determine status
+                                    if current_time < jadwal_time:
+                                        status = 'upcoming'  
+                                    elif current_time >= jadwal_time and current_time <= datetime.combine(today, jadwal_time).replace(hour=jadwal_time.hour + 1).time():
+                                        status = 'ongoing'  
+                                    else:
+                                        status = 'completed' 
+                                    
+                                    shows.append({
+                                        'time': jadwal_time.strftime('%H:%M'),
+                                        'name': jadwal['nama_atraksi'],
+                                        'location': jadwal['atraksi']['lokasi'] if jadwal['atraksi'] else 'Lokasi tidak ditemukan',
+                                        'status': status,
+                                        'datetime': jadwal_datetime
+                                    })
+                            except Exception as e:
+                                print(f"Error parsing jadwal: {str(e)}")
+                                continue
+                    
+                    # Sort shows by time
+                    shows.sort(key=lambda x: x['datetime'])
+                    role_data['shows'] = shows
+                    
+                    # Get animals trained by this trainer
+                    trainer_shows = supabase.table('jadwal_penugasan').select('nama_atraksi').eq('username_lh', username).execute()
+                    
+                    trained_animals = []
+                    if trainer_shows.data:
+                        show_names = [show['nama_atraksi'] for show in trainer_shows.data]
+                        
+                        # Get animals participating in these shows
+                        for show_name in set(show_names): 
+                            animals_result = supabase.table('berpartisipasi').select('''
+                                hewan(id, nama, spesies)
+                            ''').eq('nama_fasilitas', show_name).execute()
+                            
+                            if animals_result.data:
+                                for animal_data in animals_result.data:
+                                    if animal_data['hewan']:
+                                        trained_animals.append({
+                                            'id': animal_data['hewan']['id'],
+                                            'name': animal_data['hewan']['nama'] or 'Nama tidak tersedia',
+                                            'species': animal_data['hewan']['spesies'],
+                                            'show': show_name
+                                        })
+                    
+                    role_data['trained_animals'] = trained_animals
+                    
+                    # Calculate statistics
+                    role_data['total_shows_today'] = len(shows)
+                    role_data['total_animals'] = len(trained_animals)
+                    role_data['completed_shows'] = len([s for s in shows if s['status'] == 'completed'])
+                    role_data['upcoming_shows'] = len([s for s in shows if s['status'] == 'upcoming'])
+                    
+                except Exception as e:
+                    print(f"Error getting trainer data: {str(e)}")
+                    # Set default values if error occurs
+                    role_data['shows'] = []
+                    role_data['trained_animals'] = []
+                    role_data['total_shows_today'] = 0
+                    role_data['total_animals'] = 0
+                    role_data['completed_shows'] = 0
+                    role_data['upcoming_shows'] = 0
+                
         elif role == 'admin_staff':
             # Get admin staff specific data
             admin_result = supabase.table('staf_admin').select('*').eq('username_sa', username).execute()
             if admin_result.data:
                 role_data = admin_result.data[0]
+                
+                # Calculate ticket statistics
+                try:
+                    # Get all reservations
+                    reservasi_result = supabase.table('reservasi').select('*').execute()
+                    
+                    if reservasi_result.data:
+                        reservations = reservasi_result.data
+                        
+                        # Calculate total tickets 
+                        total_tickets = sum(
+                            r['jumlah_tiket'] for r in reservations 
+                            if r['status'].lower() in ['terjadwal', 'selesai']
+                        )
+                        
+                        # Calculate revenue 
+                        total_revenue = total_tickets * 100000
+                        
+                        # Calculate visitors (only completed tickets)
+                        total_visitors = sum(
+                            r['jumlah_tiket'] for r in reservations 
+                            if r['status'].lower() == 'selesai'
+                        )
+                        
+                        # Add calculated data to role_data
+                        role_data['ticket_count'] = total_tickets
+                        role_data['revenue'] = total_revenue
+                        role_data['today_visitor_count'] = total_visitors
+                        
+                        # Create revenue report by date
+                        from collections import defaultdict
+                        from datetime import datetime
+                        
+                        revenue_by_date = defaultdict(lambda: {'tickets': 0, 'revenue': 0, 'visitors': 0})
+                        
+                        for reservation in reservations:
+                            date_str = reservation['tanggal_kunjungan']
+                            status = reservation['status'].lower()
+                            tickets = reservation['jumlah_tiket']
+                            
+                            # Add to revenue report if status is terjadwal or selesai
+                            if status in ['terjadwal', 'selesai']:
+                                revenue_by_date[date_str]['tickets'] += tickets
+                                revenue_by_date[date_str]['revenue'] += tickets * 100000
+                                
+                                # Add visitors only if status is selesai
+                                if status == 'selesai':
+                                    revenue_by_date[date_str]['visitors'] += tickets
+                        
+                        # Convert to list and sort by date
+                        revenue_report = []
+                        for date_str, data in revenue_by_date.items():
+                            try:
+                                # Parse date for proper sorting
+                                date_obj = datetime.fromisoformat(date_str).date()
+                                revenue_report.append({
+                                    'date': date_str,
+                                    'date_obj': date_obj,
+                                    'formatted_date': date_obj.strftime('%d %B %Y'),
+                                    'tickets': data['tickets'],
+                                    'revenue': data['revenue'],
+                                })
+                            except:
+                                revenue_report.append({
+                                    'date': date_str,
+                                    'date_obj': None,
+                                    'formatted_date': date_str,
+                                    'tickets': data['tickets'],
+                                    'revenue': data['revenue'],
+                                })
+                        
+                        # Sort by date
+                        revenue_report.sort(key=lambda x: x['date_obj'] or datetime.min.date(), reverse=True)
+                        role_data['revenue_report'] = revenue_report
+                        
+                    else:
+                        # No reservations found
+                        role_data['ticket_count'] = 0
+                        role_data['revenue'] = 0
+                        role_data['today_visitor_count'] = 0
+                        role_data['revenue_report'] = []
+                        
+                except Exception as e:
+                    print(f"Error calculating admin statistics: {str(e)}")
+                    # Set default values if calculation fails
+                    role_data['ticket_count'] = 0
+                    role_data['revenue'] = 0
+                    role_data['today_visitor_count'] = 0
+                    role_data['revenue_report'] = []
         
         context = {
             'role': role,
@@ -499,6 +808,20 @@ def profile_settings(request):
             spesialisasi_result = supabase.table('spesialisasi').select('nama_spesialisasi').eq('username_sh', username).execute()
             role_data['specializations'] = [s['nama_spesialisasi'] for s in spesialisasi_result.data]
         
+        elif role == 'animal_keeper':
+            keeper_result = supabase.table('penjaga_hewan').select('*').eq('username_jh', username).execute()
+            if keeper_result.data:
+                role_data = keeper_result.data[0]
+
+        elif role == 'trainer':
+            trainer_result = supabase.table('pelatih_hewan').select('*').eq('username_lh', username).execute()
+            if trainer_result.data:
+                role_data = trainer_result.data[0]
+
+        elif role == 'admin_staff':
+            admin_result = supabase.table('staf_admin').select('*').eq('username_sa', username).execute()
+            if admin_result.data:
+                role_data = admin_result.data[0]
         context = {
             'user_data': user_data,
             'role_data': role_data,
