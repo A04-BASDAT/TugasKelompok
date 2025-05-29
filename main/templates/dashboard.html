@@ -219,19 +219,18 @@
                         <h2 class="text-xl font-gabarito text-white">Informasi Dokter Hewan</h2>
                     </div>
                     <div class="p-6">
-                        {% with vet=user.profile.vet_profile %}
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                             <div class="bg-[#f8f5f0] p-4 rounded-lg">
                                 <p class="text-sm text-gray-500">Nomor Sertifikasi Profesional</p>
-                                <p class="font-medium">{{ role_data.no_str }}</p>
+                                <p class="font-medium">{{ role_data.no_str|default:"Belum diisi" }}</p>
                             </div>
                             <div class="bg-[#f8f5f0] p-4 rounded-lg">
                                 <p class="text-sm text-gray-500">Spesialisasi</p>
                                 <p class="font-medium">
-                                    {% if role_data.specializations == 'other' %}
-                                        {{ role_data.other_specialization }}
-                                    {% else %}
+                                    {% if role_data.specializations %}
                                         {{ role_data.specializations|join:", " }}
+                                    {% else %}
+                                        Belum ada spesialisasi
                                     {% endif %}
                                 </p>
                             </div>
@@ -239,15 +238,15 @@
                         <h3 class="text-lg font-gabarito text-[#586132] mb-3">Jumlah Hewan yang Ditangani</h3>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                             <div class="bg-[#f8f5f0] p-4 rounded-lg text-center">
-                                <p class="text-3xl font-bold text-[#586132]">0</p>
+                                <p class="text-3xl font-bold text-[#586132]">{{ role_data.total_patients|default:"0" }}</p>
                                 <p class="text-sm text-gray-500">Total Pasien</p>
                             </div>
                             <div class="bg-[#f8f5f0] p-4 rounded-lg text-center">
-                                <p class="text-3xl font-bold text-[#586132]">0</p>
+                                <p class="text-3xl font-bold text-[#586132]">{{ role_data.active_patients|default:"0" }}</p>
                                 <p class="text-sm text-gray-500">Pasien Aktif</p>
                             </div>
                             <div class="bg-[#f8f5f0] p-4 rounded-lg text-center">
-                                <p class="text-3xl font-bold text-[#586132]">0</p>
+                                <p class="text-3xl font-bold text-[#586132]">{{ role_data.recovered_patients|default:"0" }}</p>
                                 <p class="text-sm text-gray-500">Sembuh</p>
                             </div>
                         </div>
@@ -256,25 +255,50 @@
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
                                     <tr>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hewan</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jenis</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID Hewan</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Diagnosis</th>
                                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
                                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
-                                    <tr>
-                                        <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-500">
-                                            Belum ada rekam medis
-                                        </td>
-                                    </tr>
+                                    {% if role_data.latest_records %}
+                                        {% for record in role_data.latest_records %}
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ record.id_hewan|slice:":8" }}...</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ record.diagnosis|default:"Tidak ada diagnosis" }}</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ record.tanggal_pemeriksaan }}</td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                {% if record.status_kesehatan == 'Sehat' %}
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                    {{ record.status_kesehatan }}
+                                                </span>
+                                                {% elif record.status_kesehatan == 'Sakit' %}
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                                    {{ record.status_kesehatan }}
+                                                </span>
+                                                {% else %}
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                    {{ record.status_kesehatan }}
+                                                </span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    {% else %}
+                                        <tr>
+                                            <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-500">
+                                                Belum ada rekam medis
+                                            </td>
+                                        </tr>
+                                    {% endif %}
                                 </tbody>
                             </table>
                         </div>
-                        {% endwith %}
                     </div>
                 </div>
 
+                <!-- Update bagian Dashboard Penjaga Hewan - hapus {% with staff=user.profile.staff_profile %} dan {% endwith %} -->
                 {% elif role == 'animal_keeper' %}
                 <!-- Dashboard untuk Penjaga Hewan -->
                 <div class="bg-white rounded-lg shadow-md overflow-hidden mb-6 border-t-4 border-[#7d8b48]">
@@ -282,26 +306,29 @@
                         <h2 class="text-xl font-gabarito text-white">Informasi Penjaga Hewan</h2>
                     </div>
                     <div class="p-6">
-                        {% with staff=user.profile.staff_profile %}
                         <!-- Menampilkan ID Staff -->
                         <div class="mb-6">
                             <div class="bg-[#f8f5f0] p-4 rounded-lg">
                                 <p class="text-sm text-gray-500">ID Staff</p>
-                                <p class="font-medium">{{ role_data.id_staf}}</p> 
+                                <p class="font-medium">{{ role_data.id_staf|default:"Belum diisi" }}</p> 
                             </div>
                         </div>
-                        <!-- Jumlah hewan yang sudah diberi pakan -->
+                        <!-- Jumlah hewan yang sudah diberi pakan hari ini -->
                         <div class="mb-6">
-                            <h3 class="text-lg font-gabarito text-[#586132] mb-3">Jumlah Hewan yang Sudah Diberi Pakan</h3>
-                            <div class="bg-[#f8f5f0] p-4 rounded-lg text-center">
-                                <p class="text-3xl font-bold text-[#586132]">{{ staff.fed_animals_count|default:"0" }}</p> <!-- kalau ada -->
-                                <p class="text-sm text-gray-500">Total Hari Ini</p>
+                            <h3 class="text-lg font-gabarito text-[#586132] mb-3">Statistik Pemberian Pakan Hari Ini</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="bg-[#f8f5f0] p-4 rounded-lg text-center">
+                                    <p class="text-3xl font-bold text-[#586132]">{{ role_data.animals_fed_today|default:"0" }}</p>
+                                    <p class="text-sm text-gray-500">Hewan Diberi Pakan</p>
+                                </div>
+                                <div class="bg-[#f8f5f0] p-4 rounded-lg text-center">
+                                    <p class="text-3xl font-bold text-[#586132]">{{ role_data.feeding_sessions_today|default:"0" }}</p>
+                                    <p class="text-sm text-gray-500">Sesi Pemberian Pakan</p>
+                                </div>
                             </div>
                         </div>
-                        {% endwith %}
                     </div>
-                </div>
-                                
+                </div>                                  
 
                 {% elif role == 'admin_staff' %}
                 <!-- Dashboard untuk Staf Administrasi -->

@@ -459,18 +459,71 @@ def dashboard(request):
             dokter_result = supabase.table('dokter_hewan').select('*').eq('username_dh', username).execute()
             if dokter_result.data:
                 role_data = dokter_result.data[0]
-                # Get specializations
-                spesialisasi_result = supabase.table('spesialisasi').select('nama_spesialisasi').eq('username_sh', username).execute()
-                if spesialisasi_result.data:
-                    role_data['specializations'] = [s['nama_spesialisasi'] for s in spesialisasi_result.data]
-                else:
-                    role_data['specializations'] = []
-                    
+                
+            # Get specializations
+            spesialisasi_result = supabase.table('spesialisasi').select('nama_spesialisasi').eq('username_sh', username).execute()
+            if spesialisasi_result.data:
+                role_data['specializations'] = [s['nama_spesialisasi'] for s in spesialisasi_result.data]
+            else:
+                role_data['specializations'] = []
+            
+            # Get medical records handled by this vet
+            catatan_result = supabase.table('catatan_medis').select('*').eq('username_dh', username).execute()
+            if catatan_result.data:
+                medical_records = catatan_result.data
+                
+                # Count unique animals (total patients)
+                unique_animals = len(set(record['id_hewan'] for record in medical_records))
+                role_data['total_patients'] = unique_animals
+                
+                # Count active patients (animals with recent records)
+                active_patients = len([r for r in medical_records if r.get('status_kesehatan') in ['Sakit', 'Dalam Perawatan']])
+                role_data['active_patients'] = active_patients
+                
+                # Count recovered patients
+                recovered_patients = len([r for r in medical_records if r.get('status_kesehatan') == 'Sehat'])
+                role_data['recovered_patients'] = recovered_patients
+                
+                # Get latest 5 medical records
+                latest_records = sorted(medical_records, key=lambda x: x.get('tanggal_pemeriksaan', ''), reverse=True)[:5]
+                role_data['latest_records'] = latest_records
+            else:
+                role_data['total_patients'] = 0
+                role_data['active_patients'] = 0
+                role_data['recovered_patients'] = 0
+                role_data['latest_records'] = []
+                
         elif role == 'animal_keeper':
             # Get animal keeper specific data
             keeper_result = supabase.table('penjaga_hewan').select('*').eq('username_jh', username).execute()
             if keeper_result.data:
                 role_data = keeper_result.data[0]
+            
+            # Get feeding records for today
+            memberi_result = supabase.table('memberi').select('*').eq('username_jh', username).execute()
+            if memberi_result.data:
+                feeding_records = memberi_result.data
+                
+                # Count animals fed today
+                today_feeding = []
+                for record in feeding_records:
+                    jadwal_str = record.get('jadwal')
+                    if jadwal_str:
+                        try:
+                            # Parse the timestamp to check if it's today
+                            jadwal_date = datetime.fromisoformat(jadwal_str.replace('Z', '+00:00')).date()
+                            if jadwal_date == today:
+                                today_feeding.append(record)
+                        except:
+                            continue
+                
+                # Count unique animals fed today
+                animals_fed_today = len(set(record['id_hewan'] for record in today_feeding))
+                role_data['animals_fed_today'] = animals_fed_today
+                role_data['feeding_sessions_today'] = len(today_feeding)
+            else:
+                role_data['animals_fed_today'] = 0
+                role_data['feeding_sessions_today'] = 0
                 
         elif role == 'trainer':
             # Get trainer specific data
