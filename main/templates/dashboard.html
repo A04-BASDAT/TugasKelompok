@@ -71,6 +71,23 @@
                                 <p class="font-medium">{{ role_data.tgl_lahir|date:"d F Y"|default:"Belum diisi" }}</p>
                             </div>
                         </div>
+
+                        <!-- Statistik Kunjungan -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                            <div class="bg-[#f8f5f0] p-4 rounded-lg text-center">
+                                <p class="text-2xl font-bold text-[#586132]">{{ role_data.total_visits|default:0 }}</p>
+                                <p class="text-sm text-gray-500">Total Kunjungan</p>
+                            </div>
+                            <div class="bg-[#f8f5f0] p-4 rounded-lg text-center">
+                                <p class="text-2xl font-bold text-[#7d8b48]">{{ role_data.upcoming_visits|default:0 }}</p>
+                                <p class="text-sm text-gray-500">Kunjungan Mendatang</p>
+                            </div>
+                            <div class="bg-[#f8f5f0] p-4 rounded-lg text-center">
+                                <p class="text-2xl font-bold text-[#b8860b]">{{ role_data.total_tickets|default:0 }}</p>
+                                <p class="text-sm text-gray-500">Total Tiket</p>
+                            </div>
+                        </div>
+                        
                         <!-- Riwayat Kunjungan -->
                         <div class="mb-6">
                             <h3 class="text-lg font-gabarito text-[#586132] mb-3">Riwayat Kunjungan</h3>
@@ -79,20 +96,49 @@
                                     <thead class="bg-gray-50">
                                         <tr>
                                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
-                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jam</th>
-                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fasilitas</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jenis</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah Tiket</th>
                                         </tr>
                                     </thead>
                                     <tbody class="bg-white divide-y divide-gray-200">
-                                        <tr>
-                                            <td colspan="3" class="px-6 py-4 text-center text-sm text-gray-500">
-                                                Belum ada riwayat kunjungan
-                                            </td>
-                                        </tr>
+                                        {% if role_data.completed_visits %}
+                                            {% for visit in role_data.completed_visits %}
+                                            <tr class="hover:bg-gray-50">
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                    {{ visit.tanggal_formatted }}
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                    {{ visit.nama_fasilitas }}
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                                        {% if visit.jenis_fasilitas == 'Wahana' %}bg-blue-100 text-blue-800
+                                                        {% elif visit.jenis_fasilitas == 'Atraksi' %}bg-purple-100 text-purple-800
+                                                        {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                                        {{ visit.jenis_fasilitas }}
+                                                    </span>
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                    {{ visit.jumlah_tiket }} tiket
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        {% else %}
+                                            <tr>
+                                                <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-500">
+                                                    <div class="flex flex-col items-center py-4">
+                                                        <p>Belum ada riwayat kunjungan</p>
+                                                        <p class="text-xs text-gray-400 mt-1">Kunjungan yang sudah selesai akan muncul di sini</p>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        {% endif %}
                                     </tbody>
                                 </table>
                             </div>
                         </div>
+                        
                         <!-- Informasi Tiket -->
                         <div>
                             <h3 class="text-lg font-gabarito text-[#586132] mb-3">Informasi Tiket</h3>
@@ -100,18 +146,66 @@
                                 <table class="min-w-full divide-y divide-gray-200">
                                     <thead class="bg-gray-50">
                                         <tr>
-                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kode Tiket</th>
-                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jenis Tiket</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fasilitas</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jenis</th>
                                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah</th>
                                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                         </tr>
                                     </thead>
                                     <tbody class="bg-white divide-y divide-gray-200">
-                                        <tr>
-                                            <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-500">
-                                                Belum ada tiket yang dibeli
-                                            </td>
-                                        </tr>
+                                        {% if role_data.all_tickets %}
+                                            {% for ticket in role_data.all_tickets %}
+                                            <tr class="hover:bg-gray-50">
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                    {{ ticket.nama_fasilitas }}
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                                        {% if ticket.jenis_fasilitas == 'Wahana' %}bg-blue-100 text-blue-800
+                                                        {% elif ticket.jenis_fasilitas == 'Atraksi' %}bg-purple-100 text-purple-800
+                                                        {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                                        {{ ticket.jenis_fasilitas }}
+                                                    </span>
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                    {{ ticket.tanggal_formatted }}
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                    {{ ticket.jumlah_tiket }} tiket
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap">
+                                                    {% if ticket.status == 'selesai' %}
+                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                        Selesai
+                                                    </span>
+                                                    {% elif ticket.status == 'terjadwal' %}
+                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                        Terjadwal
+                                                    </span>
+                                                    {% elif ticket.status == 'dibatalkan' %}
+                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                                        Dibatalkan
+                                                    </span>
+                                                    {% else %}
+                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                                        {{ ticket.status }}
+                                                    </span>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        {% else %}
+                                            <tr>
+                                                <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">
+                                                    <div class="flex flex-col items-center py-4">
+                                                        <div class="text-4xl mb-2">🎫</div>
+                                                        <p>Belum ada tiket yang dibeli</p>
+                                                        <p class="text-xs text-gray-400 mt-1">Tiket yang Anda beli akan muncul di sini</p>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        {% endif %}
                                     </tbody>
                                 </table>
                             </div>
@@ -223,29 +317,55 @@
                                 <p class="font-medium">{{ role_data.id_staf}}</p> 
                             </div>
                         </div>
-                        <h3 class="text-lg font-gabarito text-[#586132] mb-3">Ringkasan Penjualan Tiket Hari Ini</h3>
+                        <h3 class="text-lg font-gabarito text-[#586132] mb-3">Ringkasan Penjualan Tiket</h3>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                             <div class="bg-[#f8f5f0] p-4 rounded-lg text-center">
-                                <p class="text-3xl font-bold text-[#586132]">{{ admin.today_ticket_count }}</p>
+                                <p class="text-3xl font-bold text-[#586132]">{{ role_data.ticket_count|default:0 }}</p>
                                 <p class="text-sm text-gray-500">Jumlah Tiket</p>
                             </div>
                             <div class="bg-[#f8f5f0] p-4 rounded-lg text-center">
-                                <p class="text-3xl font-bold text-[#586132]">Rp {{ admin.today_revenue|floatformat:0 }}</p>
+                                <p class="text-3xl font-bold text-[#586132]">Rp {{ role_data.revenue|default:0|floatformat:0 }}</p>
                                 <p class="text-sm text-gray-500">Pendapatan</p>
                             </div>
                             <div class="bg-[#f8f5f0] p-4 rounded-lg text-center">
-                                <p class="text-3xl font-bold text-[#586132]">{{ admin.today_visitor_count }}</p>
+                                <p class="text-3xl font-bold text-[#586132]">{{ role_data.today_visitor_count|default:0 }}</p>
                                 <p class="text-sm text-gray-500">Jumlah Pengunjung</p>
                             </div>
                         </div>
-                        <h3 class="text-lg font-gabarito text-[#586132] mb-3">Laporan Pendapatan Mingguan</h3>
-                        <div class="bg-[#f8f5f0] p-4 rounded-lg mb-6">
-                            <div class="h-64 w-full">
-                                <!-- Placeholder for chart -->
-                                <div class="h-full w-full bg-gray-100 rounded flex items-center justify-center">
-                                    <p class="text-gray-500">Grafik pendapatan mingguan</p>
-                                </div>
-                            </div>
+                        <h3 class="text-lg font-gabarito text-[#586132] mb-3">Laporan Pendapatan</h3>
+                        <div class="bg-[#f8f5f0] rounded-lg overflow-hidden mb-6">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah Tiket</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pendapatan</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    {% if role_data.revenue_report %}
+                                        {% for report in role_data.revenue_report %}
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                {{ report.formatted_date }}
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {{ report.tickets }}
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                Rp {{ report.revenue|floatformat:0 }}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    {% else %}
+                                        <tr>
+                                            <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-500">
+                                                Belum ada data pendapatan
+                                            </td>
+                                        </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
                         </div>
                         {% endwith %}
                     </div>
@@ -257,12 +377,35 @@
                         <h2 class="text-xl font-gabarito text-white">Informasi Pelatih Pertunjukan</h2>
                     </div>
                     <div class="p-6">
+                        <!-- ID Staff -->
                         <div class="mb-6">
                             <div class="bg-[#f8f5f0] p-4 rounded-lg">
                                 <p class="text-sm text-gray-500">ID Staff</p>
-                                <p class="font-medium">{{ role_data.id_staf}}</p> 
+                                <p class="font-medium">{{ role_data.id_staf }}</p> 
                             </div>
                         </div>
+
+                        <!-- Statistik Ringkas -->
+                        <h3 class="text-lg font-gabarito text-[#586132] mb-3">Ringkasan Hari Ini</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                            <div class="bg-[#f8f5f0] p-4 rounded-lg text-center">
+                                <p class="text-2xl font-bold text-[#586132]">{{ role_data.total_shows_today|default:0 }}</p>
+                                <p class="text-sm text-gray-500">Total Pertunjukan</p>
+                            </div>
+                            <div class="bg-[#f8f5f0] p-4 rounded-lg text-center">
+                                <p class="text-2xl font-bold text-[#7d8b48]">{{ role_data.completed_shows|default:0 }}</p>
+                                <p class="text-sm text-gray-500">Selesai</p>
+                            </div>
+                            <div class="bg-[#f8f5f0] p-4 rounded-lg text-center">
+                                <p class="text-2xl font-bold text-[#b8860b]">{{ role_data.upcoming_shows|default:0 }}</p>
+                                <p class="text-sm text-gray-500">Akan Datang</p>
+                            </div>
+                            <div class="bg-[#f8f5f0] p-4 rounded-lg text-center">
+                                <p class="text-2xl font-bold text-[#586132]">{{ role_data.total_animals|default:0 }}</p>
+                                <p class="text-sm text-gray-500">Hewan Dilatih</p>
+                            </div>
+                        </div>
+
                         <!-- Jadwal Pertunjukan Hari Ini -->
                         <h3 class="text-lg font-gabarito text-[#586132] mb-3">Jadwal Pertunjukan Hari Ini</h3>
                         <div class="bg-[#f8f5f0] rounded-lg overflow-hidden mb-6">
@@ -276,12 +419,18 @@
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
-                                    {% if shows %}
-                                        {% for show in shows %}
-                                        <tr>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ show.time }}</td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ show.name }}</td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ show.location }}</td>
+                                    {% if role_data.shows %}
+                                        {% for show in role_data.shows %}
+                                        <tr class="{% if show.status == 'ongoing' %}bg-green-50{% elif show.status == 'upcoming' %}bg-blue-50{% endif %}">
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                {{ show.time }}
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold">
+                                                {{ show.name }}
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {{ show.location }}
+                                            </td>
                                             <td class="px-6 py-4 whitespace-nowrap">
                                                 {% if show.status == 'upcoming' %}
                                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
@@ -302,13 +451,16 @@
                                     {% else %}
                                         <tr>
                                             <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-500">
-                                                Tidak ada pertunjukan terjadwal hari ini
+                                                <div class="flex flex-col items-center py-4">
+                                                    <p>Tidak ada pertunjukan terjadwal hari ini</p>
+                                                </div>
                                             </td>
                                         </tr>
                                     {% endif %}
                                 </tbody>
                             </table>
                         </div>
+
                         <!-- Daftar Hewan yang Dilatih -->
                         <h3 class="text-lg font-gabarito text-[#586132] mb-3">Daftar Hewan yang Dilatih</h3>
                         <div class="bg-[#f8f5f0] rounded-lg overflow-hidden mb-6">
@@ -316,30 +468,34 @@
                                 <thead class="bg-gray-50">
                                     <tr>
                                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Hewan</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jenis</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Spesies</th>
                                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pertunjukan</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kemajuan Latihan</th>
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
-                                    {% if trained_animals %}
-                                        {% for animal in trained_animals %}
-                                        <tr>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ animal.name }}</td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ animal.species }}</td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ animal.show }}</td>
-                                            <td class="px-6 py-4 whitespace-nowrap">
-                                                <div class="w-full bg-gray-200 rounded-full h-2.5">
-                                                    <div class="bg-[#586132] h-2.5 rounded-full" style="width: {{ animal.progress }}%"></div>
-                                                </div>
-                                                <span class="text-xs text-gray-500">{{ animal.progress }}%</span>
+                                    {% if role_data.trained_animals %}
+                                        {% for animal in role_data.trained_animals %}
+                                        <tr class="hover:bg-gray-50">
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                {{ animal.name }}
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {{ animal.species }}
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#e0cfc2] text-[#586132]">
+                                                    {{ animal.show }}
+                                                </span>
                                             </td>
                                         </tr>
                                         {% endfor %}
                                     {% else %}
                                         <tr>
-                                            <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-500">
-                                                Tidak ada hewan dalam pelatihan
+                                            <td colspan="3" class="px-6 py-4 text-center text-sm text-gray-500">
+                                                <div class="flex flex-col items-center py-4">
+                                                    <div class="text-4xl mb-2">🐾</div>
+                                                    <p>Tidak ada hewan dalam pelatihan</p>
+                                                </div>
                                             </td>
                                         </tr>
                                     {% endif %}
