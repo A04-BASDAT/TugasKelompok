@@ -1,5 +1,7 @@
 # views.py
 from django.shortcuts import render, redirect
+from django.contrib.auth.models import User
+from django.contrib.auth import login
 from django.contrib import messages
 from django.http import JsonResponse
 import uuid
@@ -30,18 +32,16 @@ def login_view(request):
                 verification = result.data[0]
                 
                 if verification['is_valid']:
-                    # Login berhasil
                     request.session['username'] = username
                     request.session['user_data'] = verification['user_data']
-                    
-                    # Determine user role
                     role = get_user_role(username)
                     request.session['user_role'] = role
-                    
-                    return redirect('main:dashboard')
-                else:
-                    # Login gagal - pesan error dari stored procedure
-                    messages.error(request, verification['message'])
+
+                    # Tambahan penting untuk login_required
+                    user, created = User.objects.get_or_create(username=username)
+                    login(request, user)
+
+                    return redirect('feeding_list')
             else:
                 messages.error(request, 'Terjadi kesalahan sistem')
                 

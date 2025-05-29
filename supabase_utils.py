@@ -1,6 +1,12 @@
 from datetime import date
 from supabase_client import supabase
 from typing import Dict, List, Any, Optional
+from supabase import create_client, Client
+import os
+
+url = os.getenv("SUPABASE_URL")
+key = os.getenv("SUPABASE_KEY")
+supabase: Client = create_client(url, key)
 
 def serialize_dates(data: Dict[str, Any]) -> Dict[str, Any]:
     from datetime import date, datetime
@@ -116,9 +122,30 @@ def get_organisasi_by_id(id_adopter: str) -> Optional[Dict[str, Any]]:
     result = supabase.table('organisasi').select('*').eq('id_adopter', id_adopter).execute().data
     return result[0] if result else None
 
-# Pakan related functions
-def get_all_pakan() -> List[Dict[str, Any]]:
-    return supabase.table('pakan').select('*').execute().data
+# Ambil semua jadwal pakan
+def get_all_pakan():
+    response = supabase.table('pakan').select("*").execute()
+    return response.data
+
+# Tambahkan jadwal pakan baru
+def create_pakan(data):
+    response = supabase.table('pakan').insert(data).execute()
+    return response.data[0]
+
+# Update jadwal pakan berdasarkan ID
+def update_pakan(id, data):
+    response = supabase.table('pakan').update(data).eq('id', id).execute()
+    return response.data[0]
+
+# Hapus jadwal pakan
+def delete_pakan(id):
+    response = supabase.table('pakan').delete().eq('id', id).execute()
+    return response
+
+# Tandai sebagai selesai
+def mark_done_pakan(id):
+    response = supabase.table('pakan').update({"status": "Selesai Diberikan"}).eq("id", id).execute()
+    return response.data[0]
 
 def get_pakan_by_id(id_hewan: str) -> List[Dict[str, Any]]:
     return supabase.table('pakan').select('*').eq('id_hewan', id_hewan).execute().data

@@ -33,5 +33,6 @@ urlpatterns = [
     path('adopter/', include('adopter.urls')),
     path('feeding/', include(('feeding.urls', 'feeding'), namespace='feeding')),
     path('medical/', include(('medical.urls', 'medical'), namespace='medical')),
+    
 ]
 
