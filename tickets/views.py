@@ -579,7 +579,16 @@ def edit_reservasi_wahana(request, username_p, nama_fasilitas, tanggal_kunjungan
                 messages.success(request, "Reservasi berhasil diubah")
                 return redirect('tickets:detail_reservasi_wahana', username_p=username_p, nama_fasilitas=nama_fasilitas, tanggal_kunjungan=tanggal_kunjungan)
             except Exception as e:
-                messages.error(request, f"Error updating reservation: {str(e)}")
+                msg = str(e)
+                if "'message':" in msg:
+                    start = msg.find("'message':") + len("'message':")
+                    end = msg.find("',", start)
+                    if end != -1:
+                        msg = msg[start:end].strip().strip("'").strip()
+                    messages.error(request, msg)
+                else:
+                    messages.error(request, f"Error updating reservation: {msg}")
+
 
         facility_result = supabase.table('fasilitas').select('*').eq('nama', nama_fasilitas).execute()
         facility = facility_result.data[0] if facility_result.data else {}
@@ -781,7 +790,15 @@ def admin_edit_reservasi(request, username_p, nama_fasilitas, tanggal_kunjungan)
                         messages.error(request, "Gagal memverifikasi update")
 
                 except Exception as update_error:
-                    messages.error(request, f"Error saat update: {str(update_error)}")
+                    msg = str(update_error)
+                    if "'message':" in msg:
+                        start = msg.find("'message':") + len("'message':")
+                        end = msg.find("',", start)
+                        if end != -1:
+                            msg = msg[start:end].strip().strip("'").strip()
+                    else:
+                        msg = f"Error saat update: {msg}"
+                    messages.error(request, msg)
 
             return redirect('tickets:admin_list_reservasi')
 
