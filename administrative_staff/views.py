@@ -12,8 +12,7 @@ from supabase_utils import (
     create_complete_adopter, create_adopsi, create_adopsi_raw, debug_table_structure,
     update_adopsi, update_adopter, delete_adopter,
     normalize_uuid, debug_uuid_comparison, generate_adopter_uuid, check_uuid_format_compatibility,
-    get_pengguna_by_username, trigger_notify_top_5_adopter,
-    delete_adopter_with_cascade, create_update_total_kontribusi_trigger
+    get_pengguna_by_username, trigger_notify_top_5_adopter
 )
 
 @register.filter
@@ -130,45 +129,46 @@ def adopter_list(request):
     individual_adopters = []
     organization_adopters = []
     
+    # **PERBAIKAN: Calculate TOTAL contributions from adopsi table (same as realtime function)**
     adopter_total_contributions = {}
     adopter_yearly_contributions = {}
-    adopter_payment_status = {}  
     
+    # Calculate contributions from adopsi records
     for adoption in data['adoptions']:
-        try:
-            adopter_id = adoption['id_adopter']
-            kontribusi = int(adoption.get('kontribusi_finansial', 0))
-            payment_status = adoption.get('status_pembayaran', '').lower()
-            
-            if adopter_id not in adopter_payment_status:
-                adopter_payment_status[adopter_id] = {'has_pending': False}
-            if payment_status == 'tertunda':
-                adopter_payment_status[adopter_id]['has_pending'] = True
-            
-            if adopter_id not in adopter_total_contributions:
-                adopter_total_contributions[adopter_id] = 0
-            adopter_total_contributions[adopter_id] += kontribusi
-            
-            start_date = datetime.strptime(adoption['tgl_mulai_adopsi'], '%Y-%m-%d')
-            if start_date >= one_year_ago:
-                if adopter_id not in adopter_yearly_contributions:
-                    adopter_yearly_contributions[adopter_id] = 0
-                adopter_yearly_contributions[adopter_id] += kontribusi
+        if adoption.get('status_pembayaran', '').lower() == 'lunas':
+            try:
+                adopter_id = adoption['id_adopter']
+                kontribusi = int(adoption.get('kontribusi_finansial', 0))
                 
-        except (ValueError, TypeError):
-            continue
+                # Total contributions (all time)
+                if adopter_id not in adopter_total_contributions:
+                    adopter_total_contributions[adopter_id] = 0
+                adopter_total_contributions[adopter_id] += kontribusi
+                
+                # Yearly contributions
+                start_date = datetime.strptime(adoption['tgl_mulai_adopsi'], '%Y-%m-%d')
+                if start_date >= one_year_ago:
+                    if adopter_id not in adopter_yearly_contributions:
+                        adopter_yearly_contributions[adopter_id] = 0
+                    adopter_yearly_contributions[adopter_id] += kontribusi
+                    
+            except (ValueError, TypeError):
+                continue
 
+    # Process individual adopters
     for individu in data['individus']:
         adopter_id = individu['id_adopter']
+        # Get adopter base info
         adopter_base = next((a for a in data['adopters'] if a['id_adopter'] == adopter_id), None)
         
         if adopter_base:
             active_adoptions = []
             
-            total_contribution = adopter_total_contributions.get(adopter_id, 0)
+            # Calculate real contributions from adopsi table
+            total_contribution_from_adopsi = adopter_total_contributions.get(adopter_id, 0)
             yearly_contribution = adopter_yearly_contributions.get(adopter_id, 0)
-            has_pending = adopter_payment_status.get(adopter_id, {}).get('has_pending', False)
             
+            # Check for active adoptions
             for adoption in data['adoptions']:
                 if adoption['id_adopter'] == adopter_id:
                     end_date = datetime.strptime(adoption['tgl_berhenti_adopsi'], '%Y-%m-%d')
@@ -180,26 +180,28 @@ def adopter_list(request):
                 'name': individu['nama'],
                 'type': 'individu',
                 'username': adopter_base['username_adopter'],
-                'total_kontribusi': total_contribution,
+                'total_kontribusi': total_contribution_from_adopsi,  # Use calculated total from adopsi
                 'yearly_kontribusi': yearly_contribution,
                 'has_active_adoptions': len(active_adoptions) > 0,
-                'has_pending_payment': has_pending,
                 'nik': individu['nik']
             }
             
             individual_adopters.append(adopter_data)
 
+    # Process organization adopters
     for organisasi in data['organisasis']:
         adopter_id = organisasi['id_adopter']
+        # Get adopter base info
         adopter_base = next((a for a in data['adopters'] if a['id_adopter'] == adopter_id), None)
         
         if adopter_base:
             active_adoptions = []
             
-            total_contribution = adopter_total_contributions.get(adopter_id, 0)
+            # Calculate real contributions from adopsi table
+            total_contribution_from_adopsi = adopter_total_contributions.get(adopter_id, 0)
             yearly_contribution = adopter_yearly_contributions.get(adopter_id, 0)
-            has_pending = adopter_payment_status.get(adopter_id, {}).get('has_pending', False)
             
+            # Check for active adoptions
             for adoption in data['adoptions']:
                 if adoption['id_adopter'] == adopter_id:
                     end_date = datetime.strptime(adoption['tgl_berhenti_adopsi'], '%Y-%m-%d')
@@ -211,24 +213,46 @@ def adopter_list(request):
                 'name': organisasi['nama_organisasi'],
                 'type': 'organisasi',
                 'username': adopter_base['username_adopter'],
-                'total_kontribusi': total_contribution,
+                'total_kontribusi': total_contribution_from_adopsi,  # Use calculated total from adopsi
                 'yearly_kontribusi': yearly_contribution,
                 'has_active_adoptions': len(active_adoptions) > 0,
-                'has_pending_payment': has_pending,
                 'npp': organisasi['npp']
             }
             
             organization_adopters.append(adopter_data)
 
+    # Sort adopters by TOTAL contribution (from adopsi table)
     individual_adopters.sort(key=lambda x: x['total_kontribusi'], reverse=True)
     organization_adopters.sort(key=lambda x: x['total_kontribusi'], reverse=True)
     
+    # **PERBAIKAN: Create combined top adopters for initial display**
     all_adopters_combined = []
-    for adopter in individual_adopters + organization_adopters:
-        if not adopter['has_pending_payment']:  
-            all_adopters_combined.append(adopter)
     
-    top_adopters = sorted(all_adopters_combined, key=lambda x: x['total_kontribusi'], reverse=True)[:5]
+    # Add individual adopters with type info
+    for adopter in individual_adopters:
+        if adopter['total_kontribusi'] > 0:
+            all_adopters_combined.append({
+                'name': adopter['name'],
+                'username': adopter['username'],
+                'type': 'Individu',
+                'total_kontribusi': adopter['total_kontribusi'],
+                'yearly_kontribusi': adopter['yearly_kontribusi']
+            })
+    
+    # Add organization adopters with type info
+    for adopter in organization_adopters:
+        if adopter['total_kontribusi'] > 0:
+            all_adopters_combined.append({
+                'name': adopter['name'],
+                'username': adopter['username'],
+                'type': 'Organisasi',
+                'total_kontribusi': adopter['total_kontribusi'],
+                'yearly_kontribusi': adopter['yearly_kontribusi']
+            })
+    
+    # Sort combined list by total contribution and take top 5
+    all_adopters_combined.sort(key=lambda x: x['total_kontribusi'], reverse=True)
+    top_adopters = all_adopters_combined[:5]
 
     context = {
         'individual_adopters': individual_adopters,
@@ -267,6 +291,7 @@ def submit_adoption(request):
         animal_id = data.get('animal_id')
         kontribusi = data.get('kontribusi', 0)
         
+        # Validate and convert kontribusi to integer
         try:
             kontribusi = int(kontribusi) if kontribusi else 0
         except (ValueError, TypeError) as e:
@@ -274,9 +299,11 @@ def submit_adoption(request):
                 'error': f'Kontribusi finansial harus berupa angka. Nilai yang diterima: {kontribusi}'
             }, status=400)
         
+        # **PERBAIKAN UTAMA: Cek apakah user sudah menjadi adopter**
         existing_adopter = get_adopter_by_username(username)
         
         if existing_adopter:
+            # User sudah menjadi adopter, gunakan ID yang sudah ada
             new_adopter = existing_adopter
             
             # Update total kontribusi adopter yang sudah ada
@@ -285,7 +312,8 @@ def submit_adoption(request):
             new_adopter['total_kontribusi'] = updated_total
             
         else:
-
+            # User belum menjadi adopter, buat adopter baru
+            # Create adopter data
             adopter_data = {
                 'username_adopter': username,
                 'total_kontribusi': kontribusi  
@@ -316,21 +344,25 @@ def submit_adoption(request):
                 is_individual=is_individual
             )
         
+        # Validate animal exists
         animal = get_hewan_by_id(animal_id)
         if not animal:
             return JsonResponse({
                 'error': f'Hewan dengan ID {animal_id} tidak ditemukan'
             }, status=404)
-       
+        
+        # **PERBAIKAN: Pastikan konsistensi tipe data UUID**
+        # Ambil ID adopter langsung dari record yang sudah tersimpan di database
         adopter_id_from_db = new_adopter['id_adopter']
         validated_animal_id = str(animal['id'])
         
-    
+        # **KONSISTENSI CHECK: Pastikan tipe data sama**
         print(f"[TYPE CHECK] new_adopter['id_adopter']: {type(adopter_id_from_db)} = {adopter_id_from_db}")
         print(f"[TYPE CHECK] validated_animal_id: {type(validated_animal_id)} = {validated_animal_id}")
         
+        # Gunakan UUID yang sama persis dari database adopter tanpa normalisasi tambahan
         adoption_data = {
-            'id_adopter': adopter_id_from_db,  
+            'id_adopter': adopter_id_from_db,  # Gunakan langsung dari database adopter
             'id_hewan': validated_animal_id,
             'tgl_mulai_adopsi': data.get('start_date'),
             'tgl_berhenti_adopsi': data.get('end_date'),
@@ -338,12 +370,15 @@ def submit_adoption(request):
             'status_pembayaran': 'tertunda'
         }
         
+        # **FINAL TYPE CHECK**
         print(f"[FINAL CHECK] adoption_data['id_adopter']: {type(adoption_data['id_adopter'])} = {adoption_data['id_adopter']}")
         print(f"[FINAL CHECK] Are they the same type? {type(adopter_id_from_db) == type(adoption_data['id_adopter'])}")
         print(f"[FINAL CHECK] Are they the same value? {adopter_id_from_db == adoption_data['id_adopter']}")
         
+        # Coba insert ke tabel adopsi (this will trigger the update function)
         new_adoption = create_adopsi(adoption_data)
         
+        # Create success message with trigger notification
         trigger_message = f'SUKSES: Total kontribusi adopter "{username}" telah diperbarui.'
         
         return JsonResponse({
@@ -402,6 +437,7 @@ def delete_adopter_view(request, adopter_id):
         data = load_data()
         current_date = datetime.now()
         
+        # Check for active adoptions
         for adoption in data['adoptions']:
             if adoption['id_adopter'] == adopter_id:
                 end_date = datetime.strptime(adoption['tgl_berhenti_adopsi'], '%Y-%m-%d')
@@ -411,6 +447,7 @@ def delete_adopter_view(request, adopter_id):
                         'message': 'Tidak dapat menghapus adopter yang masih aktif mengadopsi satwa.'
                     }, status=400)
         
+        # Use cascade delete function
         delete_result = delete_adopter_with_cascade(adopter_id)
         
         if delete_result['success']:
@@ -434,6 +471,7 @@ def delete_adopter_view(request, adopter_id):
 
 @csrf_exempt
 def initialize_trigger(request):
+    """Initialize the total kontribusi update trigger"""
     if request.method != 'POST':
         return JsonResponse({'error': 'Method not allowed'}, status=405)
     
@@ -448,13 +486,16 @@ def initialize_trigger(request):
 
 @csrf_exempt
 def get_top_adopters_realtime(request):
+    """Get top adopters data in real-time from database and trigger notification"""
     if request.method != 'GET':
         return JsonResponse({'error': 'Method not allowed'}, status=405)
     
     try:
+        # Simulate some processing time for loading effect
         import time
-        time.sleep(1) 
+        time.sleep(1)  # 1 second delay to show loading
         
+        # Get real-time data from adopsi and adopter tables
         from datetime import datetime, timedelta
         
         current_date = datetime.now()
@@ -466,8 +507,9 @@ def get_top_adopters_realtime(request):
         all_individu = get_all_individu()
         all_organisasi = get_all_organisasi()
         
+        # **PERBAIKAN: Calculate TOTAL contributions (all time) for each adopter from adopsi table**
         adopter_contributions = {}
-        adopter_yearly_contributions = {} 
+        adopter_yearly_contributions = {}  # Keep yearly for trigger message
         
         for adopsi in all_adopsi:
             if adopsi.get('status_pembayaran', '').lower() == 'lunas':
@@ -475,10 +517,12 @@ def get_top_adopters_realtime(request):
                     adopter_id = adopsi['id_adopter']
                     kontribusi = int(adopsi.get('kontribusi_finansial', 0))
                     
+                    # Total contributions (all time)
                     if adopter_id not in adopter_contributions:
                         adopter_contributions[adopter_id] = 0
                     adopter_contributions[adopter_id] += kontribusi
                     
+                    # Yearly contributions for trigger message
                     start_date = datetime.strptime(adopsi['tgl_mulai_adopsi'], '%Y-%m-%d')
                     if start_date >= one_year_ago:
                         if adopter_id not in adopter_yearly_contributions:
@@ -486,8 +530,10 @@ def get_top_adopters_realtime(request):
                         adopter_yearly_contributions[adopter_id] += kontribusi
                         
                 except (ValueError, TypeError) as e:
+                    # Skip invalid date or contribution data
                     continue
         
+        # **PERBAIKAN: Create combined top adopters list (individu + organisasi)**
         all_adopters_with_contributions = []
         
         for adopter_id, total_contribution in adopter_contributions.items():
@@ -496,14 +542,17 @@ def get_top_adopters_realtime(request):
                 adopter_base = next((a for a in all_adopters if a['id_adopter'] == adopter_id), None)
                 
                 if adopter_base:
+                    # Find adopter name and type (check if individual or organization)
                     adopter_name = None
                     adopter_type = None
                     
+                    # Check in individual table
                     individu = next((i for i in all_individu if i['id_adopter'] == adopter_id), None)
                     if individu:
                         adopter_name = individu['nama']
                         adopter_type = 'Individu'
                     else:
+                        # Check in organization table
                         organisasi = next((o for o in all_organisasi if o['id_adopter'] == adopter_id), None)
                         if organisasi:
                             adopter_name = organisasi['nama_organisasi']
@@ -516,20 +565,24 @@ def get_top_adopters_realtime(request):
                             'username': adopter_base['username_adopter'],
                             'name': adopter_name,
                             'type': adopter_type,
-                            'total_kontribusi': total_contribution,  
-                            'yearly_kontribusi': yearly_contribution,  
-                            'database_total': adopter_base.get('total_kontribusi', 0)  
+                            'total_kontribusi': total_contribution,  # Total all time
+                            'yearly_kontribusi': yearly_contribution,  # For trigger message
+                            'database_total': adopter_base.get('total_kontribusi', 0)  # From adopter table
                         })
         
+        # **PERBAIKAN: Sort by TOTAL contribution (all time) and take top 5**
         all_adopters_with_contributions.sort(key=lambda x: x['total_kontribusi'], reverse=True)
         top_adopters = all_adopters_with_contributions[:5]
         
-  
+        # **TRIGGER THE DATABASE FUNCTION**
+        # Call the trigger function to generate RAISE NOTICE
         trigger_result = trigger_notify_top_5_adopter()
         
+        # Create notification message similar to trigger function but with total contributions
         top_adopter_message = ""
         if top_adopters:
             top_adopter = top_adopters[0]
+            # Use yearly contribution for trigger message (as per original trigger function)
             if top_adopter['yearly_kontribusi'] > 0:
                 top_adopter_message = f'SUKSES: Daftar Top 5 Adopter berhasil diperbarui, dengan peringkat pertama "{top_adopter["name"]}" ({top_adopter["type"]}) - Total Kontribusi: Rp{top_adopter["total_kontribusi"]:,} | Kontribusi Setahun Terakhir: Rp{top_adopter["yearly_kontribusi"]:,}'
             else:
@@ -546,7 +599,7 @@ def get_top_adopters_realtime(request):
             'success': True,
             'data': {
                 'top_adopters': top_adopters,
-                'notification_message': top_adopter_message,
+                'notification_message': top_adopter_message + trigger_info,
                 'total_adopters_with_contributions': len(all_adopters_with_contributions),
                 'data_retrieved_at': current_date.strftime('%Y-%m-%d %H:%M:%S'),
                 'trigger_result': trigger_result,

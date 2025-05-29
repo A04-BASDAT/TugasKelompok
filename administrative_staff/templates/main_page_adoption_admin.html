@@ -345,12 +345,19 @@
         const toast = document.createElement('div');
         toast.className = `mb-4 p-4 rounded-lg shadow-lg transform transition-all duration-300 ease-in-out ${
             type === 'success' ? 'bg-green-500' : 'bg-red-500'
-        } text-white`;
+        } text-white max-w-sm`;
         
         toast.style.opacity = '0';
         toast.style.transform = 'translateX(100%)';
         
-        toast.textContent = message;
+        toast.innerHTML = `
+            <div class="flex items-center justify-between">
+                <span class="text-sm">${message}</span>
+                <button onclick="this.parentElement.parentElement.remove()" class="ml-3 text-white hover:text-gray-200 font-bold">
+                    ✕
+                </button>
+            </div>
+        `;
         
         toastContainer.appendChild(toast);
         
@@ -363,10 +370,42 @@
             toast.style.opacity = '0';
             toast.style.transform = 'translateX(100%)';
             setTimeout(() => {
-                toastContainer.removeChild(toast);
+                if (toast.parentElement) {
+                    toastContainer.removeChild(toast);
+                }
             }, 300);
-        }, 3000);
+        }, 5000);
     }
+
+    function showMultipleToasts(messages, type = 'success', delay = 1000) {
+        messages.forEach((message, index) => {
+            setTimeout(() => {
+                showToast(message, type);
+            }, index * delay);
+        });
+    }
+
+    // Initialize trigger on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize the trigger function
+        fetch('/administrative-staff/initialize-trigger/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log('Trigger initialized successfully:', data.message);
+            } else {
+                console.warn('Trigger initialization failed:', data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error initializing trigger:', error);
+        });
+    });
 
     // Adopter Form Modal
     function openAdopterForm(animalId) {
@@ -458,9 +497,15 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                showToast(data.message, "success");
+                const messages = [data.message];
+                if (data.trigger_message) {
+                    messages.push(data.trigger_message);
+                }
+                showMultipleToasts(messages, "success");
                 closeIndividualForm();
-                window.location.reload();
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
             } else {
                 showToast(data.error, "error");
             }
@@ -508,9 +553,15 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                showToast(data.message, "success");
+                const messages = [data.message];
+                if (data.trigger_message) {
+                    messages.push(data.trigger_message);
+                }
+                showMultipleToasts(messages, "success");
                 closeOrganizationForm();
-                window.location.reload();
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
             } else {
                 showToast(data.error, "error");
             }
