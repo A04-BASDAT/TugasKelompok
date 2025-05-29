@@ -176,4 +176,7 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
+# Login URL for @login_required decorator
+LOGIN_URL = 'main:login'
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

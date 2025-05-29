@@ -5,18 +5,21 @@
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
-    <div class="bg-white rounded-lg shadow-md p-6 mb-8 border-t-4 border-green-400">
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8 border-t-4 border-[#586132]">
         <h1 class="text-3xl font-bold text-center text-gray-800 mb-4">Program Adopsi Satwa: Bantu Mereka dengan Cinta</h1>
         <p class="text-center text-gray-600 mb-6">Terima kasih telah mewujudkan kepedulian Anda terhadap satwa dengan menjadi adopter simbolis! Dapatkan sertifikat digital dan laporan berkala tentang kondisi hewan yang Anda dukung.</p>
 
-        <div class="bg-green-50 p-4 rounded-lg mb-6">
+        <div class="bg-[#f3f4eb] p-4 rounded-lg mb-6">
             <h2 class="text-xl font-semibold text-gray-800 mb-2">Informasi Adopter</h2>
             {% if adopter_info.type == 'individu' %}
                 <p class="text-gray-700">Nama: {{ adopter_info.name }}</p>
                 <p class="text-gray-700">NIK: {{ adopter_info.nik }}</p>
-            {% else %}
+            {% elif adopter_info.type == 'organisasi' %}
                 <p class="text-gray-700">Nama Organisasi: {{ adopter_info.name }}</p>
                 <p class="text-gray-700">NPP: {{ adopter_info.npp }}</p>
+            {% else %}
+                <p class="text-gray-700">Nama: {{ adopter_info.name }}</p>
+                <p class="text-gray-700"><em>Data adopter sedang diproses</em></p>
             {% endif %}
             <p class="text-gray-700">Username: {{ adopter_info.username }}</p>
             <p class="text-gray-700">Total Kontribusi: Rp {{ adopter_info.total_kontribusi|floatformat:0|default:"0" }}</p>
@@ -25,11 +28,11 @@
         <h2 class="text-2xl font-semibold text-gray-800 mb-4">Hewan yang Sedang Anda Adopsi</h2>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {% for item in adopted_animals %}
+            {% for item in my_adoptions %}
                 <div class="bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200 hover:shadow-xl transition-shadow duration-300">
                     <div class="relative">
                         <img src="{{ item.animal.url_foto }}" alt="{{ item.animal.nama }}" class="w-full h-48 object-cover">
-                        <div class="absolute top-0 right-0 bg-green-500 text-white text-xs font-bold px-2 py-1 m-2 rounded-full">
+                        <div class="absolute top-0 right-0 bg-[#586132] text-white text-xs font-bold px-2 py-1 m-2 rounded-full">
                             {{ item.animal.status_kesehatan }}
                         </div>
                     </div>
@@ -46,14 +49,14 @@
                             <span>Berakhir: {{ item.adoption.tgl_berhenti_adopsi }}</span>
                         </div>
 
-                        <button onclick="openModal('animalDetailModal-{{ item.animal.id }}')" class="w-full bg-green-100 hover:bg-green-200 text-green-800 py-2 px-4 rounded-lg text-sm font-medium transition duration-200">
+                        <button onclick="openModal('animalDetailModal-{{ item.animal.id }}')" class="w-full bg-[#f3f4eb] hover:bg-[#e5e6d8] text-[#586132] py-2 px-4 rounded-lg text-sm font-medium transition duration-200">
                             Lihat Detail
                         </button>
                     </div>
                 </div>
             {% empty %}
-                <div class="col-span-3 text-center py-12 bg-gray-50 rounded-lg">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-gray-400 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div class="col-span-3 text-center py-12 bg-[#f3f4eb] rounded-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-[#586132] mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                     </svg>
                     <p class="text-gray-600 mb-2">Anda belum mengadopsi hewan apapun.</p>
@@ -65,13 +68,13 @@
 </div>
 
 <!-- Modal Informasi Hewan Adopsi -->
-{% for item in adopted_animals %}
+{% for item in my_adoptions %}
 <div id="animalDetailModal-{{ item.animal.id }}" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
     <div class="relative top-20 mx-auto p-0 border w-full max-w-xl shadow-lg rounded-lg bg-white overflow-hidden">
         <div class="flex flex-col">
-            <div class="bg-green-100 px-5 py-3 flex justify-between items-center">
-                <h3 class="text-lg font-medium text-green-800">Informasi Hewan Adopsi</h3>
-                <button onclick="closeModal('animalDetailModal-{{ item.animal.id }}')" class="text-green-600 hover:text-green-800 font-medium">
+            <div class="bg-[#f3f4eb] px-5 py-3 flex justify-between items-center">
+                <h3 class="text-lg font-medium text-[#586132]">Informasi Hewan Adopsi</h3>
+                <button onclick="closeModal('animalDetailModal-{{ item.animal.id }}')" class="text-[#586132] hover:text-[#3d4222] font-medium">
                     Tutup
                 </button>
             </div>
@@ -86,20 +89,20 @@
 
             <div class="p-5 bg-white">
                 <div class="grid grid-cols-2 gap-4 mb-5">
-                    <div class="bg-green-50 p-3 rounded-lg">
-                        <p class="text-xs text-green-600 uppercase font-semibold">Nama Hewan</p>
+                    <div class="bg-[#f3f4eb] p-3 rounded-lg">
+                        <p class="text-xs text-[#586132] uppercase font-semibold">Nama Hewan</p>
                         <p class="text-gray-800 font-medium">{{ item.animal.nama|default:"Tanpa Nama" }}</p>
                     </div>
-                    <div class="bg-green-50 p-3 rounded-lg">
-                        <p class="text-xs text-green-600 uppercase font-semibold">Jenis Hewan</p>
+                    <div class="bg-[#f3f4eb] p-3 rounded-lg">
+                        <p class="text-xs text-[#586132] uppercase font-semibold">Jenis Hewan</p>
                         <p class="text-gray-800 font-medium">{{ item.animal.spesies }}</p>
                     </div>
-                    <div class="bg-green-50 p-3 rounded-lg">
-                        <p class="text-xs text-green-600 uppercase font-semibold">Habitat</p>
+                    <div class="bg-[#f3f4eb] p-3 rounded-lg">
+                        <p class="text-xs text-[#586132] uppercase font-semibold">Habitat</p>
                         <p class="text-gray-800 font-medium">{{ item.animal.nama_habitat }}</p>
                     </div>
-                    <div class="bg-green-50 p-3 rounded-lg">
-                        <p class="text-xs text-green-600 uppercase font-semibold">Status</p>
+                    <div class="bg-[#f3f4eb] p-3 rounded-lg">
+                        <p class="text-xs text-[#586132] uppercase font-semibold">Status</p>
                         <p class="text-gray-800 font-medium">{{ item.animal.status_kesehatan }}</p>
                     </div>
                 </div>
@@ -119,15 +122,21 @@
                 </div>
 
                 <div class="grid grid-cols-2 gap-2">
-                    <button onclick="openModal('healthReportModal-{{ item.animal.id }}')" class="bg-green-100 hover:bg-green-200 text-green-800 py-2 px-4 rounded-lg text-sm font-medium transition duration-200">
+                    <button onclick="openModal('healthReportModal-{{ item.animal.id }}')" class="bg-[#f3f4eb] hover:bg-[#e5e6d8] text-[#586132] py-2 px-4 rounded-lg text-sm font-medium transition duration-200">
                         Pantau Kondisi Hewan
                     </button>
-                    <button onclick="openModal('certificateModal-{{ item.animal.id }}')" class="bg-green-100 hover:bg-green-200 text-green-800 py-2 px-4 rounded-lg text-sm font-medium transition duration-200">
+                    <button onclick="openModal('certificateModal-{{ item.animal.id }}')" class="bg-[#f3f4eb] hover:bg-[#e5e6d8] text-[#586132] py-2 px-4 rounded-lg text-sm font-medium transition duration-200">
                         Lihat Sertifikat Adopsi
                     </button>
-                    <button onclick="openModal('extendAdoptionModal-{{ item.animal.id }}')" class="bg-green-100 hover:bg-green-200 text-green-800 py-2 px-4 rounded-lg text-sm font-medium transition duration-200">
-                        Perpanjang Periode Adopsi
-                    </button>
+                    {% if item.adoption.status_pembayaran == 'lunas' %}
+                        <button onclick="openModal('extendAdoptionModal-{{ item.animal.id }}')" class="bg-[#f3f4eb] hover:bg-[#e5e6d8] text-[#586132] py-2 px-4 rounded-lg text-sm font-medium transition duration-200">
+                            Perpanjang Periode Adopsi
+                        </button>
+                    {% else %}
+                        <button data-animal-name="{{ item.animal.nama|default:'Tanpa Nama' }}" data-payment-status="{{ item.adoption.status_pembayaran }}" onclick="showPaymentWarning(this.dataset.animalName, this.dataset.paymentStatus)" class="bg-gray-200 text-gray-500 py-2 px-4 rounded-lg text-sm font-medium cursor-not-allowed" disabled>
+                            Perpanjang Periode Adopsi
+                        </button>
+                    {% endif %}
                     <button onclick="openModal('stopAdoptionModal-{{ item.animal.id }}')" class="bg-red-100 hover:bg-red-200 text-red-800 py-2 px-4 rounded-lg text-sm font-medium transition duration-200">
                         Berhenti Adopsi
                     </button>
@@ -141,21 +150,21 @@
 <div id="certificateModal-{{ item.animal.id }}" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
     <div class="relative top-20 mx-auto p-0 border w-full max-w-xl shadow-lg rounded-lg bg-white overflow-hidden">
         <div class="flex flex-col">
-            <div class="bg-green-100 px-5 py-3 flex justify-between items-center">
-                <h3 class="text-lg font-medium text-green-800">Sertifikat Adopsi Satwa</h3>
-                <button onclick="closeModal('certificateModal-{{ item.animal.id }}')" class="text-green-600 hover:text-green-800 font-medium">
+            <div class="bg-[#f3f4eb] px-5 py-3 flex justify-between items-center">
+                <h3 class="text-lg font-medium text-[#586132]">Sertifikat Adopsi Satwa</h3>
+                <button onclick="closeModal('certificateModal-{{ item.animal.id }}')" class="text-[#586132] hover:text-[#3d4222] font-medium">
                     Kembali
                 </button>
             </div>
 
-            <div class="p-6 border-4 border-green-100 m-4 bg-white">
+            <div class="p-6 border-4 border-[#f3f4eb] m-4 bg-white">
                 <div class="text-center">
                     <div class="mb-4 flex justify-center">
-                        <img src="{{ item.animal.url_foto }}" alt="{{ item.animal.nama }}" class="w-24 h-24 object-cover rounded-full border-4 border-green-200">
+                        <img src="{{ item.animal.url_foto }}" alt="{{ item.animal.nama }}" class="w-24 h-24 object-cover rounded-full border-4 border-[#f3f4eb]">
                     </div>
 
-                    <h4 class="text-2xl font-bold text-green-800 mb-2">Sertifikat Adopsi Satwa</h4>
-                    <div class="w-24 h-1 bg-green-500 mx-auto mb-4"></div>
+                    <h4 class="text-2xl font-bold text-[#586132] mb-2">Sertifikat Adopsi Satwa</h4>
+                    <div class="w-24 h-1 bg-[#586132] mx-auto mb-4"></div>
 
                     <p class="mb-2 text-gray-600">Sertifikat ini diberikan kepada</p>
                     {% if adopter_info.type == 'individu' %}
@@ -183,7 +192,7 @@
                     <p class="text-sm text-gray-600 italic">Kami sangat berterima kasih atas kepedulian dan kontribusi Anda terhadap pelestarian satwa di taman safari.</p>
 
                     <div class="mt-6 flex justify-center">
-                        <div class="border-t-2 border-green-200 w-32 pt-2">
+                        <div class="border-t-2 border-[#586132] w-32 pt-2">
                             <p class="text-xs text-gray-500">Direktur Taman Safari</p>
                         </div>
                     </div>
@@ -197,9 +206,9 @@
 <div id="healthReportModal-{{ item.animal.id }}" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
     <div class="relative top-20 mx-auto p-0 border w-full max-w-3xl shadow-lg rounded-lg bg-white overflow-hidden">
         <div class="flex flex-col">
-            <div class="bg-green-100 px-5 py-3 flex justify-between items-center">
-                <h3 class="text-lg font-medium text-green-800">Laporan Kondisi Satwa</h3>
-                <button onclick="closeModal('healthReportModal-{{ item.animal.id }}')" class="text-green-600 hover:text-green-800 font-medium">
+            <div class="bg-[#f3f4eb] px-5 py-3 flex justify-between items-center">
+                <h3 class="text-lg font-medium text-[#586132]">Laporan Kondisi Satwa</h3>
+                <button onclick="closeModal('healthReportModal-{{ item.animal.id }}')" class="text-[#586132] hover:text-[#3d4222] font-medium">
                     Tutup
                 </button>
             </div>
@@ -214,7 +223,7 @@
                                 <p class="text-sm text-gray-600">{{ item.animal.spesies }}</p>
                                 <div class="mt-2 pt-2 border-t border-gray-200">
                                     <p class="text-xs text-gray-500">Status Kesehatan</p>
-                                    <p class="font-medium text-green-600">{{ item.animal.status_kesehatan }}</p>
+                                    <p class="font-medium text-[#586132]">{{ item.animal.status_kesehatan }}</p>
                                 </div>
                                 <div class="mt-2 pt-2 border-t border-gray-200">
                                     <p class="text-xs text-gray-500">Habitat</p>
@@ -226,7 +235,7 @@
 
                     <div class="md:w-2/3">
                         <h4 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-600 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[#586132] mr-2" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 0v12h8V4H6z" clip-rule="evenodd" />
                                 <path d="M8 7a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1zm0 4a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
                             </svg>
@@ -236,25 +245,25 @@
                         <div class="bg-white rounded-lg shadow-sm overflow-hidden">
                             <div class="overflow-x-auto">
                                 <table class="min-w-full">
-                                    <thead class="bg-gray-50">
+                                    <thead class="bg-[#f3f4eb]">
                                         <tr>
-                                            <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
-                                            <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dokter</th>
-                                            <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                            <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Diagnosa</th>
-                                            <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pengobatan</th>
+                                            <th class="py-3 px-4 text-left text-xs font-medium text-[#586132] uppercase tracking-wider">Tanggal</th>
+                                            <th class="py-3 px-4 text-left text-xs font-medium text-[#586132] uppercase tracking-wider">Dokter</th>
+                                            <th class="py-3 px-4 text-left text-xs font-medium text-[#586132] uppercase tracking-wider">Status</th>
+                                            <th class="py-3 px-4 text-left text-xs font-medium text-[#586132] uppercase tracking-wider">Diagnosa</th>
+                                            <th class="py-3 px-4 text-left text-xs font-medium text-[#586132] uppercase tracking-wider">Pengobatan</th>
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-gray-200">
                                         {% for record in health_records %}
                                             {% if record.id_hewan == item.animal.id %}
-                                                <tr class="hover:bg-gray-50">
+                                                <tr class="hover:bg-[#f3f4eb]">
                                                     <td class="py-3 px-4 text-sm">{{ record.tanggal_pemeriksaan }}</td>
                                                     <td class="py-3 px-4 text-sm">Dr. Siti Aminah</td>
                                                     <td class="py-3 px-4 text-sm">
                                                         <span class="px-2 py-1 text-xs rounded-full
                                                             {% if record.status_kesehatan == 'Sehat' %}
-                                                                bg-green-100 text-green-800
+                                                                bg-[#f3f4eb] text-[#586132]
                                                             {% elif record.status_kesehatan == 'Dalam perawatan' %}
                                                                 bg-yellow-100 text-yellow-800
                                                             {% else %}
@@ -291,9 +300,9 @@
 <div id="extendAdoptionModal-{{ item.animal.id }}" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
     <div class="relative top-20 mx-auto p-0 border w-full max-w-xl shadow-lg rounded-lg bg-white overflow-hidden">
         <div class="flex flex-col">
-            <div class="bg-green-100 px-5 py-3 flex justify-between items-center">
-                <h3 class="text-lg font-medium text-green-800">Perpanjang Periode Adopsi Satwa</h3>
-                <button onclick="closeModal('extendAdoptionModal-{{ item.animal.id }}')" class="text-green-600 hover:text-green-800 font-medium">
+            <div class="bg-[#f3f4eb] px-5 py-3 flex justify-between items-center">
+                <h3 class="text-lg font-medium text-[#586132]">Perpanjang Periode Adopsi Satwa</h3>
+                <button onclick="closeModal('extendAdoptionModal-{{ item.animal.id }}')" class="text-[#586132] hover:text-[#3d4222] font-medium">
                     Tutup
                 </button>
             </div>
@@ -307,7 +316,7 @@
                     </div>
                 </div>
 
-                <div class="bg-gray-50 p-4 rounded-lg mb-6">
+                <div class="bg-[#f3f4eb] p-4 rounded-lg mb-6">
                     <h5 class="font-medium text-gray-700 mb-2">Informasi Adopter</h5>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
@@ -324,7 +333,7 @@
                 <form class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Periode Perpanjangan</label>
-                        <select class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                        <select class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#586132] focus:border-[#586132]">
                             <option value="3">3 bulan</option>
                             <option value="6">6 bulan</option>
                             <option value="12">12 bulan</option>
@@ -333,11 +342,11 @@
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Nominal Kontribusi (Rp)</label>
-                        <input type="text" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500" placeholder="Masukkan nominal kontribusi">
+                        <input type="text" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#586132] focus:border-[#586132]" placeholder="Masukkan nominal kontribusi">
                     </div>
 
-                    <div class="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
-                        <p class="text-sm text-yellow-800">
+                    <div class="bg-[#f3f4eb] p-3 rounded-lg border border-[#586132]">
+                        <p class="text-sm text-[#586132]">
                             Dengan melanjutkan, Anda menyatakan kepedulian dan minat untuk melanjutkan adopsi secara simbolis satwa ini dan bersedia memberikan kontribusi finansial untuk pemeliharaannya.
                         </p>
                     </div>
@@ -346,7 +355,7 @@
                         <button type="button" onclick="closeModal('extendAdoptionModal-{{ item.animal.id }}')" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 font-medium">
                             Batal
                         </button>
-                        <button type="button" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium">
+                        <button type="button" class="px-4 py-2 bg-[#586132] text-white rounded-lg hover:bg-[#3d4222] font-medium">
                             Perpanjang Adopsi
                         </button>
                     </div>
@@ -360,9 +369,9 @@
 <div id="extendAdoptionModal-{{ item.animal.id }}" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
     <div class="relative top-20 mx-auto p-0 border w-full max-w-xl shadow-lg rounded-lg bg-white overflow-hidden">
         <div class="flex flex-col">
-            <div class="bg-green-100 px-5 py-3 flex justify-between items-center">
-                <h3 class="text-lg font-medium text-green-800">Perpanjang Periode Adopsi Satwa</h3>
-                <button onclick="closeModal('extendAdoptionModal-{{ item.animal.id }}')" class="text-green-600 hover:text-green-800 font-medium">
+            <div class="bg-[#f3f4eb] px-5 py-3 flex justify-between items-center">
+                <h3 class="text-lg font-medium text-[#586132]">Perpanjang Periode Adopsi Satwa</h3>
+                <button onclick="closeModal('extendAdoptionModal-{{ item.animal.id }}')" class="text-[#586132] hover:text-[#3d4222] font-medium">
                     Tutup
                 </button>
             </div>
@@ -376,7 +385,7 @@
                     </div>
                 </div>
 
-                <div class="bg-gray-50 p-4 rounded-lg mb-6">
+                <div class="bg-[#f3f4eb] p-4 rounded-lg mb-6">
                     <h5 class="font-medium text-gray-700 mb-2">Informasi Organisasi</h5>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
@@ -393,7 +402,7 @@
                 <form class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Periode Perpanjangan</label>
-                        <select class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                        <select class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#586132] focus:border-[#586132]">
                             <option value="3">3 bulan</option>
                             <option value="6">6 bulan</option>
                             <option value="12">12 bulan</option>
@@ -402,11 +411,11 @@
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Nominal Kontribusi (Rp)</label>
-                        <input type="text" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500" placeholder="Masukkan nominal kontribusi">
+                        <input type="text" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#586132] focus:border-[#586132]" placeholder="Masukkan nominal kontribusi">
                     </div>
 
-                    <div class="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
-                        <p class="text-sm text-yellow-800">
+                    <div class="bg-[#f3f4eb] p-3 rounded-lg border border-[#586132]">
+                        <p class="text-sm text-[#586132]">
                             Dengan melanjutkan, organisasi Anda menyatakan kepedulian dan minat untuk melanjutkan adopsi secara simbolis satwa ini dan bersedia memberikan kontribusi finansial untuk pemeliharaannya.
                         </p>
                     </div>
@@ -415,7 +424,7 @@
                         <button type="button" onclick="closeModal('extendAdoptionModal-{{ item.animal.id }}')" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 font-medium">
                             Batal
                         </button>
-                        <button type="button" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium">
+                        <button type="button" class="px-4 py-2 bg-[#586132] text-white rounded-lg hover:bg-[#3d4222] font-medium">
                             Perpanjang Adopsi
                         </button>
                     </div>
@@ -468,6 +477,51 @@
         </div>
     </div>
 </div>
+
+<!-- Modal Payment Warning -->
+<div id="paymentWarningModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-0 border w-full max-w-md shadow-lg rounded-lg bg-white overflow-hidden">
+        <div class="flex flex-col">
+            <div class="bg-yellow-100 px-5 py-3 flex justify-between items-center">
+                <h3 class="text-lg font-medium text-yellow-800">Peringatan Pembayaran</h3>
+                <button onclick="closeModal('paymentWarningModal')" class="text-yellow-600 hover:text-yellow-800 font-medium">
+                    Tutup
+                </button>
+            </div>
+
+            <div class="p-5">
+                <div class="flex items-center mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-yellow-500 mr-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <div>
+                        <h4 class="text-lg font-bold text-gray-800">Pembayaran Belum Lunas</h4>
+                        <p class="text-gray-600">Tidak dapat melanjutkan perpanjangan</p>
+                    </div>
+                </div>
+
+                <div class="bg-yellow-50 p-4 rounded-lg mb-4">
+                    <p class="text-sm text-yellow-800 mb-2">
+                        <strong>Hewan:</strong> <span id="warningAnimalName"></span>
+                    </p>
+                    <p class="text-sm text-yellow-800">
+                        <strong>Status Pembayaran:</strong> <span id="warningPaymentStatus"></span>
+                    </p>
+                </div>
+
+                <p class="text-sm text-gray-600 mb-4">
+                    Untuk dapat memperpanjang periode adopsi, Anda harus melunasi pembayaran adopsi yang sedang berjalan terlebih dahulu. Silakan hubungi staf administrasi untuk informasi lebih lanjut.
+                </p>
+
+                <div class="flex justify-center">
+                    <button onclick="closeModal('paymentWarningModal')" class="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 font-medium">
+                        Mengerti
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endfor %}
 
 {% endblock %}
@@ -482,5 +536,42 @@
     function closeModal(modalId) {
         document.getElementById(modalId).classList.add('hidden');
     }
+
+    // JavaScript for toast notifications
+    function closeToast(button) {
+        const toast = button.closest('[role="alert"]');
+        toast.style.transition = 'opacity 0.3s ease-out';
+        toast.style.opacity = '0';
+        setTimeout(() => {
+            toast.remove();
+            // Check if no more toasts, hide container
+            const container = document.getElementById('toast-container');
+            if (container && container.children.length === 0) {
+                container.remove();
+            }
+        }, 300);
+    }
+
+    // JavaScript for payment warning modal
+    function showPaymentWarning(animalName, paymentStatus) {
+        document.getElementById('warningAnimalName').textContent = animalName;
+        document.getElementById('warningPaymentStatus').textContent = paymentStatus;
+        openModal('paymentWarningModal');
+    }
+
+    // Auto-hide toasts after 10 seconds
+    document.addEventListener('DOMContentLoaded', function() {
+        const toasts = document.querySelectorAll('[role="alert"]');
+        toasts.forEach((toast, index) => {
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    const closeButton = toast.querySelector('button');
+                    if (closeButton) {
+                        closeToast(closeButton);
+                    }
+                }
+            }, 10000 + (index * 1000)); // Stagger the auto-close timing
+        });
+    });
 </script>
 {% endblock %}

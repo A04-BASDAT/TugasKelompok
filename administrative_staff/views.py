@@ -10,7 +10,7 @@ from supabase_utils import (
     get_all_individu, get_all_organisasi, get_adopsi_by_id,
     get_hewan_by_id, get_individu_by_id, get_organisasi_by_id,
     create_complete_adopter, create_adopsi, update_adopsi,
-    delete_adopter
+    delete_adopter, get_pengguna_by_username
 )
 
 @register.filter
@@ -243,22 +243,30 @@ def submit_adoption(request):
         adopter_type = data.get('adopter_type')
         username = data.get('username')
         animal_id = data.get('animal_id')
+        kontribusi = data.get('kontribusi', 0)
         
+        # Create adopter data
         adopter_data = {
             'username_adopter': username,
-            'total_kontribusi': 0
+            'total_kontribusi': kontribusi  
         }
         
         if adopter_type == 'individu':
+            nik = data.get('nik', '')
+            if not nik.startswith('32'):  
+                nik = '32' + nik.zfill(13)  
+                
             type_data = {
-                'nama': data.get('nama'),
-                'nik': data.get('nik')
+                'nik': nik,
+                'nama': data.get('nama')
             }
             is_individual = True
         else:
+            npp = 'ORG' + str(len(get_all_organisasi()) + 1).zfill(5)
+            
             type_data = {
-                'nama_organisasi': data.get('nama_organisasi'),
-                'npp': data.get('npp')
+                'npp': npp,
+                'nama_organisasi': data.get('nama_organisasi')
             }
             is_individual = False
             
@@ -273,8 +281,8 @@ def submit_adoption(request):
             'id_hewan': animal_id,
             'tgl_mulai_adopsi': data.get('start_date'),
             'tgl_berhenti_adopsi': data.get('end_date'),
-            'kontribusi_finansial': data.get('kontribusi'),
-            'status_pembayaran': 'Belum Lunas'  
+            'kontribusi_finansial': kontribusi,
+            'status_pembayaran': 'tertunda'
         }
         
         new_adoption = create_adopsi(adoption_data)
@@ -282,7 +290,10 @@ def submit_adoption(request):
         return JsonResponse({
             'success': True,
             'message': 'Adopsi berhasil didaftarkan',
-            'data': new_adoption
+            'data': {
+                'adopter': new_adopter,
+                'adoption': new_adoption
+            }
         })
         
     except Exception as e:
@@ -339,6 +350,27 @@ def delete_adopter_view(request, adopter_id):
         return JsonResponse({
             'success': True,
             'message': 'Adopter berhasil dihapus'
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'error': str(e)
+        }, status=500)
+
+def verify_username(request):
+    if request.method != 'GET':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+    
+    try:
+        username = request.GET.get('username')
+        if not username:
+            return JsonResponse({'error': 'Username is required'}, status=400)
+        
+        user = get_pengguna_by_username(username)
+        
+        return JsonResponse({
+            'exists': user is not None,
+            'message': 'Username found' if user else 'Username not found'
         })
         
     except Exception as e:

@@ -1,9 +1,11 @@
 <!-- base.html -->
+{% load static %}
+{% load adopter_tags %}
+
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-    {% load static %}
     {% include "head.html" %}
     {% block meta %}
     {% endblock meta %}
@@ -59,8 +61,12 @@
                         </ul>
                     </li>
                     {% comment %} Check if visitor is adopter {% endcomment %}
-                    {% if request.session.is_adopter %}
-                        <li><a href="{% url 'main:dashboard' %}" class="text-white hover:text-[#e0cfc2] active:text-[#e0cfc2]">Hewan Adopsi</a></li>
+                    {% if request.session.username %}
+                        {% with adopter=request.session.username|get_adopter %}
+                            {% if adopter %}
+                                <li><a href="{% url 'adopter:adoption_program' %}" class="text-white hover:text-[#e0cfc2] active:text-[#e0cfc2]">Hewan Adopsi</a></li>
+                            {% endif %}
+                        {% endwith %}
                     {% endif %}
                 {% endif %}
 
