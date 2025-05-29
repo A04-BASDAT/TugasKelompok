@@ -4,38 +4,37 @@
 <div class="habitat-delete-container">
     <div class="page-header">
         <h1>Konfirmasi Hapus Habitat</h1>
-        <a href="{% url 'habitats:habitat_list' %}" class="back-button">Kembali ke Daftar</a>
     </div>
     
     <div class="delete-container">
-        <div class="delete-message">
-            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#a67c52" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="12" y1="8" x2="12" y2="12"></line>
-                <line x1="12" y1="16" x2="12.01" y2="16"></line>
-            </svg>
-            <p class="confirm-text">Apakah Anda yakin ingin menghapus habitat "<strong>{{ object.name }}</strong>"?</p>
+        {% if animals_count > 0 %}
+        <div class="alert alert-danger">
+            <i class="fas fa-ban"></i> 
+            <strong>Perhatian!</strong> 
+            Habitat tidak dapat dihapus karena memiliki <strong>{{ animals_count }} hewan!</strong>
+            <br>
+            <small>Pindahkan atau hapus semua hewan terlebih dahulu.</small>
         </div>
-        
-        {% if object.animal_set.exists %}
-        <div class="warning-alert">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-                <line x1="12" y1="9" x2="12" y2="13"></line>
-                <line x1="12" y1="17" x2="12.01" y2="17"></line>
-            </svg>
-            <div>
-                <strong>Perhatian!</strong> 
-                <p>Habitat ini memiliki {{ object.animal_set.count }} hewan. Menghapus habitat ini akan mempengaruhi data hewan tersebut.</p>
-            </div>
+        {% else %}
+        <div class="delete-message">
+            <i class="fas fa-trash fa-3x text-danger mb-3"></i>
+            <p class="confirm-text">Apakah Anda yakin ingin menghapus habitat "<strong>{{ habitat.nama }}</strong>"?</p>
+            <p class="mb-0">Tindakan ini tidak dapat dibatalkan!</p>
         </div>
         {% endif %}
         
         <form method="post">
             {% csrf_token %}
             <div class="form-actions">
-                <button type="submit" class="action-button delete-button">Ya, Hapus</button>
-                <a href="{% url 'habitats:habitat_list' %}" class="action-button cancel-button">Batal</a>
+                {% if animals_count == 0 %}
+                <button type="submit" class="action-button delete-button" 
+                        onclick="return confirm('Yakin ingin menghapus habitat {{ habitat.nama }}? Tindakan ini tidak dapat dibatalkan!')">
+                    Ya, Hapus Habitat
+                </button>
+                <a href="{% url 'habitats:habitat_detail' habitat.nama %}" class="action-button cancel-button">Batal</a>
+                {% else %}
+                <a href="{% url 'habitats:habitat_detail' habitat.nama %}" class="action-button cancel-button">Kembali ke Detail</a>
+                {% endif %}
             </div>
         </form>
     </div>
@@ -116,19 +115,10 @@
         align-items: flex-start;
     }
     
-    .warning-alert svg {
+    .warning-alert i {
         margin-right: 15px;
         flex-shrink: 0;
         color: #856404;
-    }
-    
-    .warning-alert strong {
-        display: block;
-        margin-bottom: 5px;
-    }
-    
-    .warning-alert p {
-        margin: 0;
     }
     
     .form-actions {
@@ -183,11 +173,6 @@
         
         .warning-alert {
             flex-direction: column;
-        }
-        
-        .warning-alert svg {
-            margin-right: 0;
-            margin-bottom: 10px;
         }
         
         .form-actions {
