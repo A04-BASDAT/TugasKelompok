@@ -1,5 +1,4 @@
 import uuid
-from datetime import datetime
 from decimal import Decimal
 from django.contrib import messages
 from django.http import Http404
@@ -56,26 +55,44 @@ def update_habitat(old_nama: str, data: Dict[str, Any]) -> Dict[str, Any]:
             if existing_habitat:
                 raise Exception(f'Habitat dengan nama "{new_nama}" sudah ada!')
             
-            # First, update the habitat record
-            response = supabase.table('habitat').update(data).eq('nama', old_nama).execute()
+            # Strategy: Update animals first, then update habitat
+            # This avoids foreign key constraint violation
             
-            # Then update all animals to use the new habitat name
+            # Get all animals in this habitat
             animals = get_all_hewan()
             animals_in_habitat = [a for a in animals if a.get('nama_habitat') == old_nama]
             
+            # Step 1: Update all animals to use the new habitat name
             if animals_in_habitat:
-                for animal in animals_in_habitat:
-                    try:
+                # First, temporarily create the new habitat record
+                temp_habitat_data = data.copy()
+                temp_response = supabase.table('habitat').insert(temp_habitat_data).execute()
+                
+                try:
+                    # Update all animals to reference the new habitat
+                    for animal in animals_in_habitat:
                         supabase.table('hewan').update({
                             'nama_habitat': new_nama
                         }).eq('id', animal['id']).execute()
-                    except Exception as e:
-                        # If animal update fails, we need to rollback the habitat change
-                        # Rollback habitat name change
-                        supabase.table('habitat').update({'nama': old_nama}).eq('nama', new_nama).execute()
-                        raise Exception(f"Failed to update animal {animal.get('nama', 'Unknown')}: {str(e)}")
-            
-            return response.data[0] if response.data else {}
+                    
+                    # Now delete the old habitat record
+                    supabase.table('habitat').delete().eq('nama', old_nama).execute()
+                    
+                    return temp_response.data[0] if temp_response.data else {}
+                    
+                except Exception as e:
+                    # Rollback: delete the temporary habitat if animal updates fail
+                    try:
+                        supabase.table('habitat').delete().eq('nama', new_nama).execute()
+                    except:
+                        pass
+                    raise Exception(f"Failed to update animals: {str(e)}")
+            else:
+                # No animals in habitat, safe to update directly
+                # Delete old and create new
+                supabase.table('habitat').delete().eq('nama', old_nama).execute()
+                response = supabase.table('habitat').insert(data).execute()
+                return response.data[0] if response.data else {}
         else:
             # If nama is not changing, just update other fields
             response = supabase.table('habitat').update(data).eq('nama', old_nama).execute()
